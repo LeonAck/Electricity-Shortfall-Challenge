@@ -54,10 +54,64 @@ import pandas as pd
 import os
 
 
-def initial_checks(train_df, test_df, sample_submission):
-    for data_set in [train_df, test_df, sample_submission]:
-        print(f"Info of data set {data_set} is:")
+def initial_checks(datasets, names):
+    for data_set, name in zip(datasets, names):
+        print(f"Informatie over data set {name} is:\n")
         print(f"Shape: {data_set.shape}")
         print(f"Columns: {data_set.columns}")
-        print(f"Info: {data_set.info()}")
-        print(f"Describe: {data_set.describe()}")
+
+
+# Functie om per stad de variabelen te tonen
+def city_variable_lists(df, cities=None):
+    if cities is None:
+        cities = ['Madrid', 'Valencia', 'Seville', 'Bilbao', 'Barcelona']
+    city_vars = {city: [] for city in cities}
+    for col in df.columns:
+        for city in cities:
+            prefix = f'{city}_'
+            if col.startswith(prefix):
+                city_vars[city].append(col)
+    return city_vars
+
+
+def check_variables(df):
+    # Check categorical variables
+    categorical_vars = df.select_dtypes(include=['object', 'category']).columns.tolist()
+    print("Categorical Variables:")
+    for var in categorical_vars:
+        unique_options = df[var].unique()
+        print(f"{var}: {unique_options}")
+
+    # Check numerical variables
+    numerical_vars = df.select_dtypes(include=['number']).columns.tolist()
+
+    # Organize numerical variables by type
+    variable_types = {
+        'wind_speed': [],
+        'wind_deg': [],
+        'rain_1h': [],
+        'rain_3h': [],
+        'humidity': [],
+        'clouds_all': [],
+        'pressure': [],
+        'snow_3h': [],
+        'weather_id': [],
+        'temp_max': [],
+        'temp_min': [],
+        'temp': []
+    }
+
+    for var in numerical_vars:
+        for key in variable_types.keys():
+            if key in var:
+                variable_types[key].append(var)
+                break
+
+    print("\nNumerical Variables:")
+    for var_type, vars in variable_types.items():
+        print(f"\n{var_type.capitalize()} Variables:")
+        for var in vars:
+            min_val = df[var].min()
+            max_val = df[var].max()
+            range_val = max_val - min_val
+            print(f"{var}: Min = {min_val}, Max = {max_val}, Range = {range_val}")
