@@ -15,19 +15,17 @@ AVAILABLE_MODELS = {
 
 def get_models():
     return {
-        'AR1': "AutoReg",  # AR1 model is handled separately
-
+        'AR1': "AutoReg",  # AR1 model is handled separately       
+        'LinearRegression': LinearRegression(),
+        'RandomForest': RandomForestRegressor(n_estimators=100, random_state=42)
     }
-        #'LinearRegression': LinearRegression(),
-        #'RandomForest': RandomForestRegressor(n_estimators=100, random_state=42)
-    
 
 def train_ar_diff_model(y_train, lag=2):
     """Train AR model on differenced y_train."""
     diff_train = y_train.diff().dropna()
     model = AutoReg(diff_train, lags=lag, old_names=False)
     model_fit = model.fit()
-
+    
     return model_fit, y_train.iloc[-1], diff_train[-lag:]  # return last value & lags
 
 
@@ -70,8 +68,6 @@ def predict_ar_diff(model_fit, last_train_value, initial_lags, steps, index):
    #     'LinearRegression': LinearRegression(),
     #    'RandomForest': RandomForestRegressor(n_estimators=100, random_state=42)
     #}
-
-
 
 
 class AR1Model(BaseEstimator):
