@@ -3,7 +3,6 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from plots import plot_predictions
-from statsmodels.tsa.ar_model import AutoReg
 from models import train_ar_diff_model, predict_ar_diff
 
 
@@ -23,11 +22,11 @@ def evaluate_model(y_true, y_pred):
     """
     return np.sqrt(mean_squared_error(y_true, y_pred))
 
-def train_and_evaluate_model(model, name, X_train, y_train, X_val, y_val): 
+def train_and_evaluate_model(output_dir, model, model_name, X_train, y_train, X_val, y_val): 
     """ Train en evalueer een model op de validatieset. Checkt of het een AR1Model is en past de training daarop aan. """ 
     # Check model type en train het model op de juiste manier 
 
-    if name == "AR1":  # Voor AR1 modellen hebben we alleen y_train nodig
+    if model_name == "AR1":  # Voor AR1 modellen hebben we alleen y_train nodig
         model_fit, last_value, lags = train_ar_diff_model(y_train)
         predictions = predict_ar_diff(model_fit, last_value, lags, steps=len(y_val), index=y_val.index)
 
@@ -38,11 +37,11 @@ def train_and_evaluate_model(model, name, X_train, y_train, X_val, y_val):
     # Bereken RMSE
     rmse = evaluate_model(y_val, predictions)
     print(y_val)
-    #plot_predictions(y_val, predictions, dataset_name="validation")
+    plot_predictions(y_val, predictions, model_name, output_dir, dataset_name="validation")
     
-    return model, rmse, predictions
+    return model, model_name, rmse, predictions
 
-def choose_best_model(df, models_to_try, target_column ='load_shortfall_3h'):
+def choose_best_model(output_dir, df, models_to_try, target_column ='load_shortfall_3h'):
     """
     Choose model that scores best on RMSE
     """
@@ -56,23 +55,24 @@ def choose_best_model(df, models_to_try, target_column ='load_shortfall_3h'):
     # split data
     X_train, X_val, y_train, y_val = split_data(df, target_column=target_column, test_size=0.2, random_state=42, time_series=True)
     
-    for name, model in models_to_try.items():
-        print(f"\nEvalueren van {name}...")
-        trained_model, rmse, _ = train_and_evaluate_model(
-            model, name, X_train, y_train, X_val, y_val
+    for model_name, model in models_to_try.items():
+        print(f"\nEvalueren van {model_name}...")
+        trained_model, model_name, rmse, _ = train_and_evaluate_model(output_dir,
+            model, model_name, X_train, y_train, X_val, y_val
         )
-        results[name] = {'model': trained_model, 'rmse': rmse}
+        results[model_name] = {'model': trained_model, 'rmse': rmse}
         print(f"RMSE: {rmse:.4f}")
         
         if rmse < best_rmse:
             best_rmse = rmse
             best_model = trained_model
+            best_model_name = model_name
     
     # Gebruik het beste model voor voorspellingen op de testset
     print(f"\nBeste model: {min(results.items(), key=lambda x: x[1]['rmse'])[0]}")
     print(f"RMSE op validatieset: {best_rmse:.4f}")
 
-    return best_rmse, best_model
+    return best_rmse, best_model, best_model_name
 
 
 def train_full_model_predict_test_set(best_model, train_df, test_df, target_column):

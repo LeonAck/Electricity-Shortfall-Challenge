@@ -5,6 +5,14 @@ import pandas as pd
 import numpy as np
 
 
+def get_imputer(config):
+    imp_cfg = config['preprocessing']['imputer']
+    
+    if imp_cfg['type'] == 'TimeAwareKNNImputer':
+        imputer = TimeAwareKNNImputer(**imp_cfg['params'])
+    else:
+        raise ValueError(f"Onbekende imputer: {imp_cfg['type']}")
+    return imputer
 
 # Custom transformer for initial data preprocessing
 class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):

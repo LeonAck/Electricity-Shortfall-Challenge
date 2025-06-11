@@ -1,0 +1,40 @@
+# configs/energy_forecasting.yaml
+
+run:
+  run_name: baseline
+  seed: &seed 42
+  submit: false
+  mlflow_log: true
+
+data:
+  data_path: 'Data/Data_raw/'
+  train_path: 'df_train.csv'
+  test_path: 'df_test.csv'
+  submission_path: 'sample_submission_load_shortfall.csv'
+  target_column: load_shortfall_3h
+
+preprocessing:
+  imputer:
+    type: TimeAwareKNNImputer
+    params:
+      n_neighbors: 5
+  freq: '3h'
+  fill_method: 'interpolate'
+
+models:
+  - type: LinearRegression
+    params: {}
+
+  - type: RandomForest
+    params:
+      n_estimators: 10
+      random_state: *seed
+
+training:
+  early_stopping_rounds: 10
+  batch_size: 64    # alleen relevant voor neural nets
+  epochs: 50        # idem
+
+logging:
+  tracking_tool: mlflow
+  artifact_dir: artifacts/${run.run_id}
