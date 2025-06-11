@@ -82,7 +82,7 @@ def train_full_model_predict_test_set(best_model, train_df, test_df, target_colu
         test_predictions = predict_ar_diff(model_fit, last_value, lags, steps=len(test_df), index=test_df.index)
 
     else:  # Voor andere modellen gebruiken we zowel X_train als y_train
-        X_test = test_df.drop(columns=[target_column])
-        test_predictions = best_model.predict(X_test)
+        best_model.fit(train_df.drop(columns=[target_column]), train_df[target_column])
+        test_predictions = best_model.predict(test_df)
 
     return test_predictions
