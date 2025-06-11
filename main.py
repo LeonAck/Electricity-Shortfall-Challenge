@@ -1,5 +1,5 @@
 from data_loading import load_data
-from config_and_logging import load_config, generate_run_id, save_run_metadata, create_output_dir
+from config_and_logging import load_config, generate_run_id, save_run_metadata, create_output_dir, log_to_mlflow
 from data_pipeline import choose_best_model, train_full_model_predict_test_set
 from models import get_model
 from preprocessing import get_imputer, create_preprocessing_pipeline
@@ -47,11 +47,15 @@ def main(config_path):
 
     metrics = {"rmse_validation": best_rmse, "model": best_model_name}
     save_run_metadata(output_dir, config, metrics)
-
-    # Train on full training set and predict on test set
-    test_predictions = train_full_model_predict_test_set(best_model, train_processed, test_processed, target_column=target_column)
+    # Log to MLflow
+    print(config.get("models", {}))
+          
+    log_to_mlflow(config, output_dir, run_id, best_model_name, best_model, metrics, parameters=config.get("models", {}))
     
     if config['run']['submit']:
+        # Train on full training set and predict on test set
+        test_predictions = train_full_model_predict_test_set(best_model, train_processed, test_processed, target_column=target_column)
+
         # Output
         submission_df = pd.DataFrame({
             'time': test_processed.index,
