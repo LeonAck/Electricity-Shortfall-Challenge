@@ -1,26 +1,33 @@
 from data_loading import load_data
-from data_pipeline import split_data, train_and_evaluate_model, choose_best_model, train_full_model_predict_test_set
-from models import get_models
-from preprocessing import preprocess_data, TimeAwareKNNImputer, create_preprocessing_pipeline
+from config_and_logging import load_config, generate_run_id, save_run_metadata, create_output_dir
+from data_pipeline import choose_best_model, train_full_model_predict_test_set
+from models import get_model
+from preprocessing import get_imputer, create_preprocessing_pipeline
+
 import pandas as pd
-from plots import plot_predictions
+import os 
 
-imputer = TimeAwareKNNImputer(n_neighbors=5)
-submit = False
-def main():
+def main(config_path):
 
-    target_column = 'load_shortfall_3h'
+    config = load_config(config_path=os.path.join(os.getcwd(), config_path))
+    run_name = config['run']['run_name']
+    run_id = generate_run_id(config)
+    output_dir = create_output_dir(run_name, run_id) 
+
+    target_column = config['data']['target_column']
+    print("Run name:", run_name)
+    print("Run ID:", run_id)
     print("Data laden...")
-    train_df, test_df, sample_submission = load_data()
+    train_df, test_df, sample_submission = load_data(config)
 
     print("Data preprocessen...")
+    
     # Create preprocessing pipeline with your preferred imputation method
     pipeline = create_preprocessing_pipeline(
-        imputer=imputer,  # or 'knn' or 'pattern'
-        freq='3h',
-        fill_method='interpolate'
+        imputer     = get_imputer(config),
+        freq        = config['preprocessing']['freq'],
+        fill_method = config['preprocessing']['fill_method']
     )
-
     # Fit the pipeline on training data
     pipeline.fit(train_df)
 
@@ -29,17 +36,22 @@ def main():
     test_processed = pipeline.transform(test_df)
     
     # Load models
-    models_to_try = get_models()
+    model_cfgs = config['models']
+    models_to_try = {
+    mc['type']: get_model(mc['type'], mc['params'])
+    for mc in model_cfgs
+    }
 
     # Model selection
-    best_rmse, best_model = choose_best_model(train_processed, models_to_try)
+    best_rmse, best_model, best_model_name = choose_best_model(output_dir, train_processed, models_to_try)
 
+    metrics = {"rmse_validation": best_rmse, "model": best_model_name}
+    save_run_metadata(output_dir, config, metrics)
 
     # Train on full training set and predict on test set
     test_predictions = train_full_model_predict_test_set(best_model, train_processed, test_processed, target_column=target_column)
     
-    plot_predictions(test_predictions)
-    if submit:
+    if config['run']['submit']:
         # Output
         submission_df = pd.DataFrame({
             'time': test_processed.index,
@@ -49,4 +61,5 @@ def main():
         print("\nVoorspellingen opgeslagen in 'sample_submission.csv'")
 
 if __name__ == "__main__":
-    main()
+    config_path = 'Configs/baseline.yaml'
+    main(config_path=config_path)

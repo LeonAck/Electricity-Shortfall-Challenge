@@ -1,4 +1,4 @@
-def plot_predictions(y_actual, y_pred, dataset_name="validation", figsize=(12, 6)):
+def plot_predictions(y_actual, y_pred, model_name, output_dir, dataset_name="validation", figsize=(12, 6)):
     """
     Plot predicted values against actual values.
     
@@ -19,6 +19,7 @@ def plot_predictions(y_actual, y_pred, dataset_name="validation", figsize=(12, 6
     """
     import matplotlib.pyplot as plt
     import numpy as np
+    import os
     
     # Create figure
     plt.figure(figsize=figsize)
@@ -48,4 +49,9 @@ def plot_predictions(y_actual, y_pred, dataset_name="validation", figsize=(12, 6
     
     # Show the plot
     plt.tight_layout()
-    plt.show()
+
+    plot_path = os.path.join(output_dir, f"{model_name}_{dataset_name}_plot.png")
+    plt.savefig(plot_path)
+    plt.close()
+
+    

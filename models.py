@@ -13,12 +13,18 @@ AVAILABLE_MODELS = {
     'RandomForest': 'Random Forest'
 }
 
-def get_models():
-    return {
-        'AR1': "AutoReg",  # AR1 model is handled separately       
-        'LinearRegression': LinearRegression(),
-        'RandomForest': RandomForestRegressor(n_estimators=100, random_state=42)
-    }
+def get_model(model_type: str, params: dict):
+    if model_type == 'LinearRegression':
+        return LinearRegression(**params)
+
+    elif model_type == 'RandomForest':
+        return RandomForestRegressor(**params)
+
+    elif model_type == 'AR1':
+        return "AutoReg"  # Placeholder
+
+    else:
+        raise ValueError(f"Unknown model type: {model_type}")
 
 def train_ar_diff_model(y_train, lag=2):
     """Train AR model on differenced y_train."""
