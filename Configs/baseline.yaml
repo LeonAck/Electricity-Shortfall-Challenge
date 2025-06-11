@@ -38,3 +38,8 @@ training:
 logging:
   tracking_tool: mlflow
   artifact_dir: artifacts/${run.run_id}
+
+mlflow:
+  enabled: true
+  experiment_name: "energy_forecasting"
+  tracking_uri: "file:./mlruns" 
