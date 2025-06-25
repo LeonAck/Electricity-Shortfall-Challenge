@@ -1,0 +1,4 @@
+{
+  "rmse_validation": 4341.433624426899,
+  "model": "ExtraTreesRegressor"
+}

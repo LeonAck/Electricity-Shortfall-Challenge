@@ -1,6 +1,6 @@
 from data_loading import load_data
 from config_and_logging import load_config, generate_run_id, save_run_metadata, create_output_dir, log_to_mlflow
-from data_pipeline import choose_best_model, train_full_model_predict_test_set
+from model_pipeline import choose_best_model, train_full_model_predict_test_set
 from models import get_model
 from preprocessing import get_imputer, create_preprocessing_pipeline
 
@@ -26,8 +26,10 @@ def main(config_path):
     pipeline = create_preprocessing_pipeline(
         imputer     = get_imputer(config),
         freq        = config['preprocessing']['freq'],
-        fill_method = config['preprocessing']['fill_method']
+        fill_method = config['preprocessing']['fill_method'],
+        add_time_dummies = config['preprocessing']['add_time_dummies']                                             
     )
+
     # Fit the pipeline on training data
     pipeline.fit(train_df)
 
@@ -47,6 +49,7 @@ def main(config_path):
 
     metrics = {"rmse_validation": best_rmse, "model": best_model_name}
     save_run_metadata(output_dir, config, metrics)
+    
     # Log to MLflow
     print(config.get("models", {}))
           
@@ -65,5 +68,5 @@ def main(config_path):
         print("\nVoorspellingen opgeslagen in 'sample_submission.csv'")
 
 if __name__ == "__main__":
-    config_path = 'Configs/baseline.yaml'
+    config_path = 'Configs/shallow1.yaml'
     main(config_path=config_path)

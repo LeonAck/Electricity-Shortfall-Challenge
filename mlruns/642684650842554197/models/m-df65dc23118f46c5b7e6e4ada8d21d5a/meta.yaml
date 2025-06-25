@@ -1,0 +1,11 @@
+artifact_location: file:///C:/Users/lackerman008/OneDrive - pwc/Outside/Code/Machine
+  learning/Electricity Shortfall Challenge/mlruns/642684650842554197/models/m-df65dc23118f46c5b7e6e4ada8d21d5a/artifacts
+creation_timestamp: 1750431774352
+experiment_id: '642684650842554197'
+last_updated_timestamp: 1750431785171
+model_id: m-df65dc23118f46c5b7e6e4ada8d21d5a
+model_type: null
+name: model
+source_run_id: 36f6f34ec983470181bcdbacccfb2b0d
+status: 2
+status_message: null
