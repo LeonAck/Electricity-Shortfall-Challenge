@@ -38,7 +38,7 @@ def train_and_evaluate_model(output_dir, model, model_name, X_train, y_train, X_
 
     # Bereken RMSE
     rmse = evaluate_model(y_val, predictions)
-    print(y_val)
+
     plot_predictions(y_val, predictions, model_name, output_dir, dataset_name="validation")
     
     return model, model_name, rmse, predictions

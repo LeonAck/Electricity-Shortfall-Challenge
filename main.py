@@ -49,7 +49,7 @@ def main(config_path):
 
     metrics = {"rmse_validation": best_rmse, "model": best_model_name}
     save_run_metadata(output_dir, config, metrics)
-    
+
     # Log to MLflow
     print(config.get("models", {}))
           
@@ -68,5 +68,5 @@ def main(config_path):
         print("\nVoorspellingen opgeslagen in 'sample_submission.csv'")
 
 if __name__ == "__main__":
-    config_path = 'Configs/shallow1.yaml'
+    config_path = 'Configs/deep1.yaml'
     main(config_path=config_path)
