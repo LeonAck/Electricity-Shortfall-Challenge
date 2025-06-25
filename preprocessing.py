@@ -4,6 +4,30 @@ from sklearn.pipeline import Pipeline
 import pandas as pd
 import numpy as np
 
+# Creating complete preprocessing pipelines with different imputation methods
+def create_preprocessing_pipeline(imputer, freq='3h', 
+                                fill_method='interpolate',
+                                add_time_dummies=None):
+    """
+    Create a complete preprocessing pipeline for weather data
+    
+    Parameters:
+    - imputer: str, one of ['month/day/hour median', 'interpolation', 'knn', 'pattern']
+    - freq: str, frequency string for datetime reindexing
+    - fill_method: str, method for filling fully missing rows
+    - pressure_column: str, name of the pressure column to impute
+    - max_gap: int, for interpolation imputer
+    - n_neighbors: int, for KNN imputer
+    
+    Returns:
+    - sklearn Pipeline object
+    """
+    
+    # Create and return the pipeline
+    return Pipeline([
+        ('preprocessor', WeatherDataPreprocessor(freq=freq, fill_method=fill_method, add_time_dummies=add_time_dummies)),
+        ('imputer', imputer)
+    ])
 
 def get_imputer(config):
     imp_cfg = config['preprocessing']['imputer']
@@ -16,17 +40,17 @@ def get_imputer(config):
 
 # Custom transformer for initial data preprocessing
 class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
-    def __init__(self, freq='3h', fill_method='interpolate'):
+    def __init__(self, freq='3h', fill_method='interpolate', add_time_dummies=None):
         """
-        Preprocesses the weather data by converting categorical variables, 
-        setting datetime index, and handling missing rows.
-        
-        Parameters:
-        - freq: str, frequency string for datetime (default='3h')
-        - fill_method: str, one of ['interpolate', 'ffill', 'bfill', 'zero']
+        Preprocesses the weather data:
+        - Converts categorical vars to numeric
+        - Sets datetime index
+        - Fills missing rows/timestamps
+        - Adds cyclical dummies for hour, day of week, and month
         """
         self.freq = freq
         self.fill_method = fill_method
+        self.add_time_dummies = add_time_dummies
     
     def fit(self, X, y=None):
         return self
@@ -51,6 +75,11 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
         # Remove any unwanted columns
         if 'Unnamed: 0' in df.columns:
             df = df.drop(columns=['Unnamed: 0'])
+
+        # Add cyclical time features
+        if self.add_time_dummies == "cyclical":
+            print("Yes")
+            df = self._add_cyclical_time_features(df)
         
         return df
     
@@ -85,6 +114,25 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
             raise ValueError("Unsupported fill_method. Choose from ['interpolate', 'ffill', 'bfill', 'zero'].")
 
         df = df.asfreq(self.freq)
+        return df
+    
+
+    def _add_cyclical_time_features(self, df):
+        # Extract time components
+        df['hour'] = df.index.hour
+        df['day_of_week'] = df.index.dayofweek
+        df['month'] = df.index.month
+
+        # Add cyclical encoding
+        df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
+        df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
+
+        df['dow_sin'] = np.sin(2 * np.pi * df['day_of_week'] / 7)
+        df['dow_cos'] = np.cos(2 * np.pi * df['day_of_week'] / 7)
+
+        df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
+        df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
+
         return df
 
 
@@ -321,30 +369,7 @@ class SimplifiedPatternImputer(BaseEstimator, TransformerMixin):
         return df
 
 
-# Creating complete preprocessing pipelines with different imputation methods
 
-def create_preprocessing_pipeline(imputer, freq='3h', 
-                                fill_method='interpolate'):
-    """
-    Create a complete preprocessing pipeline for weather data
-    
-    Parameters:
-    - imputer: str, one of ['month/day/hour median', 'interpolation', 'knn', 'pattern']
-    - freq: str, frequency string for datetime reindexing
-    - fill_method: str, method for filling fully missing rows
-    - pressure_column: str, name of the pressure column to impute
-    - max_gap: int, for interpolation imputer
-    - n_neighbors: int, for KNN imputer
-    
-    Returns:
-    - sklearn Pipeline object
-    """
-    
-    # Create and return the pipeline
-    return Pipeline([
-        ('preprocessor', WeatherDataPreprocessor(freq=freq, fill_method=fill_method)),
-        ('imputer', imputer)
-    ])
 
 
 def preprocess_data(df):

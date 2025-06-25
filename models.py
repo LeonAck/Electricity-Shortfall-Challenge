@@ -4,14 +4,12 @@ from statsmodels.tsa.arima.model import ARIMA
 from sklearn.base import BaseEstimator, RegressorMixin
 import pandas as pd
 
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor
-
-AVAILABLE_MODELS = {
-    'AR1': 'Autoregressive Model (AR1)',
-    'LinearRegression': 'Linear Regression',
-    'RandomForest': 'Random Forest'
-}
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet, BayesianRidge, SGDRegressor
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor, AdaBoostRegressor
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.svm import SVR
+from xgboost import XGBRegressor 
 
 def get_model(model_type: str, params: dict):
     if model_type == 'LinearRegression':
@@ -20,8 +18,47 @@ def get_model(model_type: str, params: dict):
     elif model_type == 'RandomForest':
         return RandomForestRegressor(**params)
 
+    elif model_type == 'Ridge':
+        return Ridge(**params)
+
+    elif model_type == 'Lasso':
+        return Lasso(**params)
+
+    elif model_type == 'ElasticNet':
+        return ElasticNet(**params)
+
+    elif model_type == 'BayesianRidge':
+        return BayesianRidge(**params)
+
+    elif model_type == 'SGDRegressor':
+        return SGDRegressor(**params)
+
+    elif model_type == 'ExtraTreesRegressor':
+        return ExtraTreesRegressor(**params)
+
+    elif model_type == 'GradientBoostingRegressor':
+        return GradientBoostingRegressor(**params)
+
+    elif model_type == 'XGBRegressor':  # Add this
+        return XGBRegressor(**params)
+
+    elif model_type == 'DecisionTreeRegressor':
+        return DecisionTreeRegressor(**params)
+
+    elif model_type == 'AdaBoostRegressor':
+        return AdaBoostRegressor(**params)
+
+    elif model_type == 'KNeighborsRegressor':
+        return KNeighborsRegressor(**params)
+
+    elif model_type == 'SVR':
+        return SVR(**params)
+
     elif model_type == 'AR1':
         return "AutoReg"  # Placeholder
+
+    elif model_type in ['MA1', 'MA2', 'SMA']:
+        return params  # Return params dict for MA models
 
     else:
         raise ValueError(f"Unknown model type: {model_type}")
