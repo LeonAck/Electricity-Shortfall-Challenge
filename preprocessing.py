@@ -1,13 +1,15 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.impute import KNNImputer
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
 
 # Creating complete preprocessing pipelines with different imputation methods
 def create_preprocessing_pipeline(imputer, freq='3h', 
                                 fill_method='interpolate',
-                                add_time_dummies=None):
+                                add_time_dummies=None, 
+                                scaling=False):
     """
     Create a complete preprocessing pipeline for weather data
     
@@ -24,10 +26,17 @@ def create_preprocessing_pipeline(imputer, freq='3h',
     """
     
     # Create and return the pipeline
-    return Pipeline([
-        ('preprocessor', WeatherDataPreprocessor(freq=freq, fill_method=fill_method, add_time_dummies=add_time_dummies)),
-        ('imputer', imputer)
-    ])
+    steps = [ ('preprocessor', WeatherDataPreprocessor(freq=freq, fill_method=fill_method, add_time_dummies=add_time_dummies))]
+
+    steps.append(('imputer', imputer))
+
+    if scaling:
+        steps.append(('scaler', StandardScaler()))
+
+    # Always convert to numpy
+    steps.append(('to_numpy', ToNumpyArray()))  
+
+    return Pipeline(steps)
 
 def get_imputer(config):
     imp_cfg = config['preprocessing']['imputer']
@@ -78,7 +87,6 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
 
         # Add cyclical time features
         if self.add_time_dummies == "cyclical":
-            print("Yes")
             df = self._add_cyclical_time_features(df)
         
         return df
@@ -100,7 +108,8 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
 
         # Identify fully missing rows
         fully_missing_mask = df.isna().all(axis=1)
-
+         
+        """
         # Apply imputation only to fully missing rows
         if self.fill_method == 'interpolate':
             df.loc[fully_missing_mask] = df.interpolate().loc[fully_missing_mask]
@@ -111,9 +120,12 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
         elif self.fill_method == 'zero':
             df.loc[fully_missing_mask] = 0
         else:
-            raise ValueError("Unsupported fill_method. Choose from ['interpolate', 'ffill', 'bfill', 'zero'].")
+            raise ValueError("Unsupported fill_method. Choose from ['interpolate', 'ffill', 'bfill', 'zero'].")"""
+        
 
         df = df.asfreq(self.freq)
+        df.drop(index=df.index[fully_missing_mask], inplace=True)
+
         return df
     
 
@@ -135,6 +147,13 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
 
         return df
 
+
+class ToNumpyArray(BaseEstimator, TransformerMixin):
+    def fit(self, X, y=None):
+        return self
+    
+    def transform(self, X):
+        return X.to_numpy() if isinstance(X, pd.DataFrame) else X
 
 # Imputation Methods
 
