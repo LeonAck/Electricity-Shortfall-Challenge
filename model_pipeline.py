@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, TimeSeriesSplit
 from sklearn.metrics import mean_squared_error
 from plots import plot_predictions
 from models import train_ar_diff_model, predict_ar_diff
+
 
 
 def split_data(df, target_column, test_size=0.2, random_state=42, time_series=False):
@@ -24,13 +25,13 @@ def evaluate_model(y_true, y_pred):
 
 def train_and_evaluate_model(output_dir, model, model_name, X_train, y_train, X_val, y_val):
     """ Train en evalueer een model op de validatieset. """
-    
+
     if model_name == "AR1":
         model_fit, last_value, lags = train_ar_diff_model(y_train)
         predictions = predict_ar_diff(model_fit, last_value, lags, steps=len(y_val), index=y_val.index)
         
     elif model_name in ["MA1", "MA2", "SMA"]:
-        predictions = train_and_predict_ma(model_name, y_train, len(y_val), y_val.index)
+        predictions = train_and_predict_ma(model_name, y_train, len(y_val), y_val.index if isinstance(y_val, pd.Series) else None)
         
     else:
         model.fit(X_train, y_train)
@@ -40,55 +41,64 @@ def train_and_evaluate_model(output_dir, model, model_name, X_train, y_train, X_
     rmse = evaluate_model(y_val, predictions)
 
     plot_predictions(y_val, predictions, model_name, output_dir, dataset_name="validation")
-    
+
     return model, model_name, rmse, predictions
 
-def choose_best_model(output_dir, df, models_to_try, target_column ='load_shortfall_3h'):
-    """
-    Choose model that scores best on RMSE
-    """
-    
-    # Train en evalueer alle modellen
-    print("\nModellen trainen en evalueren op validatieset...")
-    results = {}
+def choose_best_model(output_dir, y_train, models_to_try, train_val_split=0.2):
+    best_rmse = float("inf")
     best_model = None
-    best_rmse = float('inf')
-
-    # split data
-    X_train, X_val, y_train, y_val = split_data(df, target_column=target_column, test_size=0.2, random_state=42, time_series=True)
+    best_model_name = ""
+    best_X_train = None
+    best_X_test = None
     
-    for model_name, model in models_to_try.items():
-        print(f"\nEvalueren van {model_name}...")
-        trained_model, model_name, rmse, _ = train_and_evaluate_model(output_dir,
-            model, model_name, X_train, y_train, X_val, y_val
-        )
-        results[model_name] = {'model': trained_model, 'rmse': rmse}
-        print(f"RMSE: {rmse:.4f}")
+    for model_name, entry in models_to_try.items():
+        model = entry['model']
+        X_train = entry['X_train']
+        X_test = entry['X_test']
         
+        # Define split point
+        train_val_loc = int(len(X_train) * (1-train_val_split))
+
+        # Split
+        X_train_new = X_train[:train_val_loc]
+        X_val = X_train[train_val_loc:]
+
+        y_train_new = y_train.iloc[:train_val_loc]
+        y_val = y_train.iloc[train_val_loc:]
+
+        # Here: simple train on X_train, evaluate on same data (adjust to proper CV or split if needed)
+        model, model_name, rmse, predictions = train_and_evaluate_model(
+            output_dir, model, model_name, X_train_new, y_train_new, X_val, y_val
+        )
+        
+        print(f"Model: {model_name}, RMSE: {rmse:.4f}")
+
         if rmse < best_rmse:
             best_rmse = rmse
-            best_model = trained_model
+            best_model = model
             best_model_name = model_name
+            best_X_train = X_train
+            best_X_test = X_test
+
+    print(f"Best Model: {best_model_name}, Best RMSE: {best_rmse:.4f}")
     
-    # Gebruik het beste model voor voorspellingen op de testset
-    print(f"\nBeste model: {min(results.items(), key=lambda x: x[1]['rmse'])[0]}")
-    print(f"RMSE op validatieset: {best_rmse:.4f}")
-
-    return best_rmse, best_model, best_model_name
+    return best_rmse, best_model, best_model_name, best_X_train, best_X_test
 
 
-def train_full_model_predict_test_set(best_model, train_df, test_df, target_column):
+def train_full_model_predict_test_set(best_model, X_train, X_test, y_train):
 
     if best_model == "AutoReg":  # Voor AR1 modellen hebben we alleen y_train nodig
-        model_fit, last_value, lags = train_ar_diff_model(train_df[target_column])
-        test_predictions = predict_ar_diff(model_fit, last_value, lags, steps=len(test_df), index=test_df.index)
+        model_fit, last_value, lags = train_ar_diff_model(y_train)
+        test_predictions = predict_ar_diff(model_fit, last_value, lags, steps=len(X_test), index=X_test.index if isinstance(X_test, pd.DataFrame) else None)
+
+    elif best_model in ["MA1", "MA2", "SMA"]:
+        test_predictions = train_and_predict_ma(best_model, y_train, len(X_test), X_test.index if isinstance(X_test, pd.DataFrame) else None)
 
     else:  # Voor andere modellen gebruiken we zowel X_train als y_train
-        best_model.fit(train_df.drop(columns=[target_column]), train_df[target_column])
-        test_predictions = best_model.predict(test_df)
+        best_model.fit(X_train, y_train.values)
+        test_predictions = best_model.predict(X_test)
 
     return test_predictions
-
 
 def train_and_predict_ma(model_name, y_train, prediction_steps, y_val_index=None):
     """
