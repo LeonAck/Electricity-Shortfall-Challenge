@@ -3,8 +3,8 @@ numpy
 pandas
 matplotlib
 mlflow
-yaml
-statsmodel
+PyYAML
+statsmodels
 tensorflow
 xgboost
-matplotlib.pyplot
+matplotlib

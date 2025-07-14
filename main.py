@@ -94,7 +94,7 @@ def main(config_path):
             'time': test_df.index,  # or test_df['time'] if that's your column
             'load_shortfall_3h': test_predictions
         })
-        submission_df.to_csv('sample_submission.csv', index=False)
+        submission_df.to_csv('Output/sample_submission.csv', index=False)
         print("\nVoorspellingen opgeslagen in 'sample_submission.csv'")
 
 if __name__ == "__main__":
