@@ -99,4 +99,5 @@ def main(config_path):
 
 if __name__ == "__main__":
     config_path = 'Configs/shallow2_scaling_timeseriessplit.yaml'
+    "Testing added"
     main(config_path=config_path)
