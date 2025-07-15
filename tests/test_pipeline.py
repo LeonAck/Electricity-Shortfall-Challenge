@@ -1,6 +1,10 @@
 import os
+import sys
 import pytest
 import pandas as pd
+
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from data_loading import load_data
 from config_and_logging import load_config
@@ -55,8 +59,8 @@ def test_choose_best_model_logic(config, train_and_test_df):
     X_train_transformed = pipeline.fit_transform(X_train)
 
     models_to_try = {
-        'ridge': {
-            'model': get_model('ridge', {}),
+        'Ridge': {
+            'model': get_model('Ridge', {}),
             'X_train': X_train_transformed,
             'X_test': X_train_transformed.copy()  # dummy for test
         }
@@ -64,8 +68,8 @@ def test_choose_best_model_logic(config, train_and_test_df):
 
     rmse, model, model_name, _, _ = choose_best_model(
         output_dir='.', 
-        y=y_train, 
-        models=models_to_try, 
+        y_train=y_train, 
+        models_to_try=models_to_try, 
         train_val_split=config['preprocessing']['train_val_split']
     )
 
