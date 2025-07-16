@@ -173,6 +173,7 @@ class RNNRegressor:
             predictions = np.concatenate([padding, predictions])
         
         return predictions
+    
 
 def train_ar_diff_model(y_train, lag=2):
     """Train AR model on differenced y_train."""
