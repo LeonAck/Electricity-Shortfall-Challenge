@@ -3,9 +3,11 @@ from config_and_logging import load_config, generate_run_id, save_run_metadata, 
 from model_pipeline import choose_best_model, train_full_model_predict_test_set
 from models import get_model
 from preprocessing import get_imputer, create_preprocessing_pipeline
+from models import ModelBundle
 
 import pandas as pd
 import os
+import joblib
 
 def main(config_path):
     config = load_config(config_path=os.path.join(os.getcwd(), config_path))
@@ -18,6 +20,7 @@ def main(config_path):
     print("Run ID:", run_id)
     print("Data laden...")
     train_df, test_df, sample_submission = load_data(config)
+
 
     print("Pipelines aanmaken...")
 
@@ -62,31 +65,43 @@ def main(config_path):
 
         models_to_try[model_name] = {
             'model': model,
+            'scaling_needed': scaling_needed,
             'X_train': X_train_transformed.copy(),
             'X_test': X_test_transformed.copy()
         }
 
     # Model selection
-    best_rmse, best_model, best_model_name, best_X_train, best_X_test = choose_best_model(
+    best_model_results = choose_best_model(
         output_dir, 
         y_train, 
         models_to_try,
         config['preprocessing']['train_val_split']
     )
 
-    metrics = {"rmse_validation": best_rmse, "model": best_model_name}
+    metrics = {"rmse_validation": best_model_results['rmse'], "model": best_model_results['model_name']}
 
     save_run_metadata(output_dir, config, metrics)
 
     # Log to MLflow
-    log_to_mlflow(config, output_dir, run_id, best_model_name, best_model, metrics, parameters=config.get("models", {}))
+    log_to_mlflow(config, output_dir, run_id, best_model_results['model_name'], best_model_results["model_object"], metrics, parameters=config.get("models", {}))
+
+    # Create a folder for saved models
+    os.makedirs('saved_models', exist_ok=True)
+
+    if best_model_results['scaling_needed']:
+        joblib.dump(pipeline_scaled, "saved_models/preprocessing_pipeline.pkl")
+    else:
+        joblib.dump(pipeline_no_scaling, "saved_models/preprocessing_pipeline.pkl")
+    
+    joblib.dump(best_model_results['model_object'], "saved_models/best_model.pkl")
 
     if config['run']['submit']:
         # Train on full set and predict on test set
         test_predictions = train_full_model_predict_test_set(
-            best_model, 
-            best_X_train, 
-            best_X_test, 
+            best_model_results['model_object'], 
+            best_model_results['model_name'],
+            best_model_results['X_train'], 
+            best_model_results['X_test'], 
             y_train
         )
 
@@ -98,6 +113,6 @@ def main(config_path):
         print("\nVoorspellingen opgeslagen in 'sample_submission.csv'")
 
 if __name__ == "__main__":
-    config_path = 'Configs/shallow2_scaling_timeseriessplit.yaml'
+    config_path = 'Configs/shallow3_only_scikit.yaml'
     "Testing added"
     main(config_path=config_path)

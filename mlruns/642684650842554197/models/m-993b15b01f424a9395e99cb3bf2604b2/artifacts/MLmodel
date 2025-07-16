@@ -1,0 +1,23 @@
+artifact_path: file:///C:/Users/lackerman008/OneDrive - pwc/Outside/Code/Machine learning/Electricity
+  Shortfall Challenge/mlruns/642684650842554197/models/m-993b15b01f424a9395e99cb3bf2604b2/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.11.9
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.6.1
+mlflow_version: 3.1.0
+model_id: m-993b15b01f424a9395e99cb3bf2604b2
+model_size_bytes: 9483653
+model_uuid: m-993b15b01f424a9395e99cb3bf2604b2
+prompts: null
+run_id: 7af15fe0a37c41a9bba7f58794c2ee0e
+utc_time_created: '2025-07-16 19:03:43.091293'

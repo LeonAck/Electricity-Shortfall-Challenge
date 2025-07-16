@@ -31,10 +31,10 @@ def plot_predictions(y_actual, y_pred, model_name, output_dir, dataset_name="val
         time_index = np.arange(len(y_actual))
     
     # Plot actual values
-    plt.plot(time_index, y_actual, label='Actual', color='blue', linewidth=2)
+    plt.plot(time_index, y_actual, label='Actual', color='blue', linewidth=1)
     
     # Plot predicted values
-    plt.plot(time_index, y_pred, label='Predicted', color='red', linestyle='--', linewidth=2)
+    plt.plot(time_index, y_pred, label='Predicted', color='red', linewidth=1)
     
     # Add labels and title
     plt.title(f'Predictions vs Actual Values on {dataset_name.capitalize()} Set')

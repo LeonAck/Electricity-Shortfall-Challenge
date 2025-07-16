@@ -81,17 +81,26 @@ def choose_best_model(output_dir, y_train, models_to_try, train_val_split=0.2):
             best_X_test = X_test
 
     print(f"Best Model: {best_model_name}, Best RMSE: {best_rmse:.4f}")
+
+    best_model_results = {
+        "model_object": best_model,
+        "model_name": best_model_name,
+        "scaling_needed": models_to_try[best_model_name]['scaling_needed'],
+        "X_train": best_X_train,
+        "X_test": best_X_test,
+        "rmse": best_rmse
+    }
     
-    return best_rmse, best_model, best_model_name, best_X_train, best_X_test
+    return best_model_results
 
 
-def train_full_model_predict_test_set(best_model, X_train, X_test, y_train):
+def train_full_model_predict_test_set(best_model, best_model_name, X_train, X_test, y_train):
 
-    if best_model == "AutoReg":  # Voor AR1 modellen hebben we alleen y_train nodig
+    if best_model_name == "AutoReg":  # Voor AR1 modellen hebben we alleen y_train nodig
         model_fit, last_value, lags = train_ar_diff_model(y_train)
         test_predictions = predict_ar_diff(model_fit, last_value, lags, steps=len(X_test), index=X_test.index if isinstance(X_test, pd.DataFrame) else None)
 
-    elif best_model in ["MA1", "MA2", "SMA"]:
+    elif best_model_name in ["MA1", "MA2", "SMA"]:
         test_predictions = train_and_predict_ma(best_model, y_train, len(X_test), X_test.index if isinstance(X_test, pd.DataFrame) else None)
 
     else:  # Voor andere modellen gebruiken we zowel X_train als y_train
