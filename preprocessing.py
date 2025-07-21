@@ -5,6 +5,72 @@ from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
 
+
+def get_pipeline_for_model(model, config):
+
+    if model["type"] in ["AR", "MA1"]:
+        # Extract parameters from the config structure
+        params = model.get('params', {})
+        
+        # Return data transformation pipeline only
+        return create_timeseries_preprocessing_pipeline(
+            model_type=model["type"],
+            **params  # Unpack all parameters from the config
+        )
+    
+    elif model["type"] in [
+        'LinearRegression',
+        'RandomForest',
+        'Ridge',
+        'Lasso',
+        'ElasticNet',
+        'BayesianRidge',
+        'SGDRegressor',
+        'ExtraTreesRegressor',
+        'GradientBoostingRegressor',
+        'XGBRegressor',
+        'DecisionTreeRegressor',
+        'AdaBoostRegressor',
+        'KNeighborsRegressor',
+        'SVR'
+        ]:
+        sklearn_pipeline = create_preprocessing_pipeline(imputer=get_imputer(config), 
+                                             freq=config['preprocessing']['freq'],
+                                             fill_method=config['preprocessing']['fill_method'], 
+                                             add_time_dummies=config['preprocessing']['add_time_dummies'], 
+                                             scaling=model['scaling'])
+        
+        return StandardTransformerWrapper(sklearn_pipeline)
+
+    else:
+        raise ValueError(f"No preprocessing pipeline defined for model_type: {model['type']}")
+
+
+def create_timeseries_preprocessing_pipeline(model_type, **kwargs):
+    """Create preprocessing pipeline for time series models"""
+    
+    if model_type in ["MA", "MA1"]:  # Handle both MA and MA1
+        return Pipeline([
+            ('ma_transform', MADataTransformer(
+                window=kwargs.get('window', 1),
+                difference_order=kwargs.get('difference_order', 1)
+            ))
+        ])
+    
+    elif model_type == "AR":
+        return Pipeline([
+            ('ar_transform', ARDataTransformer(
+                lags=kwargs.get('lags', 1),
+                difference_order=kwargs.get('difference_order', 1),
+                add_lags=kwargs.get('add_lags', True)
+            ))
+        ])
+
+    
+    else:
+        raise ValueError(f"Unknown time series model type: {model_type}")
+
+
 # Creating complete preprocessing pipelines with different imputation methods
 def create_preprocessing_pipeline(imputer, freq='3h', 
                                 fill_method='interpolate',
@@ -37,6 +103,121 @@ def create_preprocessing_pipeline(imputer, freq='3h',
     steps.append(('to_numpy', ToNumpyArray()))  
 
     return Pipeline(steps)
+
+# Modify your existing scikit-learn pipeline creation
+class StandardTransformerWrapper(BaseEstimator, TransformerMixin):
+    def __init__(self, sklearn_pipeline):
+        self.sklearn_pipeline = sklearn_pipeline
+    
+    def fit(self, X, y=None):
+        self.sklearn_pipeline.fit(X, y)
+        return self
+    
+    def transform(self, X, y):
+        X_transformed = self.sklearn_pipeline.transform(X)
+        return X_transformed, y
+    
+    def fit_transform(self, X, y):
+        X_transformed = self.sklearn_pipeline.fit_transform(X, y)
+        return X_transformed, y
+
+
+class MADataTransformer(BaseEstimator, TransformerMixin):
+    """Transformer that prepares data for MA models by making y stationary"""
+    
+    def __init__(self, window=1, difference_order=1):
+        self.window = window  # MA window parameter
+        self.difference_order = difference_order
+        self.original_length = None
+        
+    def fit(self, X, y=None):
+        """Fit method - just stores metadata, no actual fitting"""
+        if X is not None:
+            self.original_length = len(X)
+        return self
+    
+    def transform(self, X, y):
+        """Transform X and y for MA model requirements"""
+        # Make y stationary by differencing
+        y_diff = self._difference_series(y, self.difference_order)
+        
+        # Adjust X to match the length of differenced y
+        X_adjusted = X[self.difference_order:] if X is not None else None
+        
+        return X_adjusted, y_diff
+    
+    def fit_transform(self, X, y):
+        """Combined fit and transform"""
+        return self.fit(X, y).transform(X, y)
+    
+    def _difference_series(self, series, order=1):
+        """Apply differencing to make series stationary"""
+        result = series.copy()
+        for _ in range(order):
+            result = np.diff(result)
+        return result
+    
+    def inverse_transform_predictions(self, predictions, last_values):
+        """Convert differenced predictions back to original scale"""
+        result = predictions.copy()
+        
+        # Reverse differencing by cumulative sum
+        for i in range(self.difference_order):
+            if i < len(last_values):
+                result = np.cumsum(np.concatenate([[last_values[-(i+1)]], result]))
+                result = result[1:]  # Remove the starting value
+        
+        return result
+
+
+class ARDataTransformer(BaseEstimator, TransformerMixin):
+    """Transformer for AR models - may need different preprocessing"""
+    
+    def __init__(self, lags=1, difference_order=1, add_lags=True):
+        self.lags = lags  # Number of AR lags
+        self.difference_order = difference_order
+        self.add_lags = add_lags
+        
+    def fit(self, X, y=None):
+        return self
+    
+    def transform(self, X, y):
+        # Make y stationary
+        y_diff = self._difference_series(y, self.difference_order)
+        
+        if self.add_lags and X is not None:
+            # Add lagged features for AR models
+            X_with_lags = self._add_lag_features(X, y, self.lags)
+            # Adjust for differencing
+            X_adjusted = X_with_lags[self.difference_order:]
+        else:
+            X_adjusted = X[self.difference_order:] if X is not None else None
+            
+        return X_adjusted, y_diff
+    
+    def fit_transform(self, X, y):
+        return self.fit(X, y).transform(X, y)
+    
+    def _difference_series(self, series, order=1):
+        result = series.copy()
+        for _ in range(order):
+            result = np.diff(result)
+        return result
+    
+    def _add_lag_features(self, X, y, n_lags):
+        """Add lagged y values as features"""
+        lagged_features = []
+        
+        for lag in range(1, n_lags + 1):
+            lagged_y = np.roll(y, lag)
+            lagged_y[:lag] = np.nan  # Set first 'lag' values to NaN
+            lagged_features.append(lagged_y.reshape(-1, 1))
+        
+        if X is not None:
+            return np.concatenate([X] + lagged_features, axis=1)
+        else:
+            return np.concatenate(lagged_features, axis=1)
+
 
 def get_imputer(config):
     imp_cfg = config['preprocessing']['imputer']
