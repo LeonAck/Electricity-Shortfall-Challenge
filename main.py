@@ -1,9 +1,7 @@
 from data_loading import load_data
 from config_and_logging import load_config, generate_run_id, save_run_metadata, create_output_dir, log_to_mlflow
-from model_pipeline import choose_best_model, train_full_model_predict_test_set
-from models import get_model
-from preprocessing import get_imputer, create_preprocessing_pipeline
-from models import ModelBundle
+from model_pipeline import choose_best_model
+from inference import predict_batch
 
 import pandas as pd
 import os
@@ -15,66 +13,18 @@ def main(config_path):
     run_id = generate_run_id(config)
     output_dir = create_output_dir(run_name, run_id)
 
-    target_column = config['data']['target_column']
     print("Run name:", run_name)
     print("Run ID:", run_id)
     print("Data laden...")
-    train_df, test_df, sample_submission = load_data(config)
+    train_df, test_df, _ = load_data(config)
 
-
-    print("Pipelines aanmaken...")
-
-    # Shared preprocessing config
-    imputer = get_imputer(config)
-    freq = config['preprocessing']['freq']
-    fill_method = config['preprocessing']['fill_method']
-    add_time_dummies = config['preprocessing']['add_time_dummies']
-
-    # Split X and y sets
-    y_train = train_df[target_column]
-    X_train = train_df.drop(columns=[target_column])
-
-    # Pipelines
-    pipeline_scaled = create_preprocessing_pipeline(imputer, freq, fill_method, add_time_dummies, scaling=True)
-    pipeline_no_scaling = create_preprocessing_pipeline(imputer, freq, fill_method, add_time_dummies, scaling=False)
-
-    # Fit both pipelines on training data
-    X_train_scaled = pipeline_scaled.fit_transform(X_train)
-    X_train_no_scaling = pipeline_no_scaling.fit_transform(X_train)
-
-    # Transform test set as well (will be needed later)
-    test_scaled = pipeline_scaled.transform(test_df)
-    test_no_scaling = pipeline_no_scaling.transform(test_df)
-
-    # Load models
-    model_cfgs = config['models']
-    models_to_try = {}
-
-    for mc in model_cfgs:
-        model_name = mc['type']
-        scaling_needed = mc.get('scaling', False)
-
-        if scaling_needed:
-            X_train_transformed = X_train_scaled
-            X_test_transformed = test_scaled
-        else:
-            X_train_transformed = X_train_no_scaling
-            X_test_transformed = test_no_scaling
-
-        model = get_model(model_name, mc['params'])
-
-        models_to_try[model_name] = {
-            'model': model,
-            'scaling_needed': scaling_needed,
-            'X_train': X_train_transformed.copy(),
-            'X_test': X_test_transformed.copy()
-        }
+    print("Choose best models...")
 
     # Model selection
     best_model_results = choose_best_model(
-        output_dir, 
-        y_train, 
-        models_to_try,
+        output_dir,
+        train_df, 
+        config,
         config['preprocessing']['train_val_split']
     )
 
@@ -87,32 +37,19 @@ def main(config_path):
 
     # Create a folder for saved models
     os.makedirs('saved_models', exist_ok=True)
-
-    if best_model_results['scaling_needed']:
-        joblib.dump(pipeline_scaled, "saved_models/preprocessing_pipeline.pkl")
-    else:
-        joblib.dump(pipeline_no_scaling, "saved_models/preprocessing_pipeline.pkl")
-    
+    joblib.dump(best_model_results["pipeline"], "saved_models/preprocessing_pipeline.pkl")
     joblib.dump(best_model_results['model_object'], "saved_models/best_model.pkl")
 
     if config['run']['submit']:
         # Train on full set and predict on test set
-        test_predictions = train_full_model_predict_test_set(
-            best_model_results['model_object'], 
-            best_model_results['model_name'],
-            best_model_results['X_train'], 
-            best_model_results['X_test'], 
-            y_train
-        )
+        test_predictions = predict_batch(test_df, best_model_results['model_object'], best_model_results["pipeline"])
 
-        submission_df = pd.DataFrame({
-            'time': test_df.index,  # or test_df['time'] if that's your column
-            'load_shortfall_3h': test_predictions
-        })
+        submission_df = pd.DataFrame(
+            test_predictions
+        )
         submission_df.to_csv('Output/sample_submission.csv', index=False)
         print("\nVoorspellingen opgeslagen in 'sample_submission.csv'")
 
 if __name__ == "__main__":
-    config_path = 'Configs/shallow3_only_scikit.yaml'
-    "Testing added"
+    config_path = 'Configs/shallow4.yaml'
     main(config_path=config_path)

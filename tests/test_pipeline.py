@@ -2,6 +2,7 @@ import os
 import sys
 import pytest
 import pandas as pd
+import joblib
 
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -9,13 +10,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from data_loading import load_data
 from config_and_logging import load_config
 from model_pipeline import choose_best_model
-from models import get_model
-from preprocessing import get_imputer, create_preprocessing_pipeline
+from inference import load_models, predict_batch
+
 
 @pytest.fixture
 def config():
     # Adjust path if needed
-    return load_config('Configs/shallow2_scaling_timeseriessplit.yaml')
+    return load_config('Configs/shallow4.yaml')
 
 @pytest.fixture
 def train_and_test_df(config):
@@ -29,50 +30,39 @@ def test_load_config_and_data(config, train_and_test_df):
     assert not train_df.empty
     assert config['data']['target_column'] in train_df.columns
 
-def test_preprocessing_pipeline_shapes(config, train_and_test_df):
-    train_df, _ = train_and_test_df
-    X = train_df.drop(columns=[config['data']['target_column']])
-    imputer = get_imputer(config)
-    pipeline = create_preprocessing_pipeline(
-        imputer,
-        freq=config['preprocessing']['freq'],
-        fill_method=config['preprocessing']['fill_method'],
-        add_time_dummies=config['preprocessing']['add_time_dummies'],
-        scaling=True
-    )
-    X_transformed = pipeline.fit_transform(X)
-    assert X_transformed.shape[0] == X.shape[0]
-
 def test_choose_best_model_logic(config, train_and_test_df):
     train_df, _ = train_and_test_df
-    y_train = train_df[config['data']['target_column']]
-    X_train = train_df.drop(columns=[config['data']['target_column']])
 
-    imputer = get_imputer(config)
-    pipeline = create_preprocessing_pipeline(
-        imputer,
-        freq=config['preprocessing']['freq'],
-        fill_method=config['preprocessing']['fill_method'],
-        add_time_dummies=config['preprocessing']['add_time_dummies'],
-        scaling=True
-    )
-    X_train_transformed = pipeline.fit_transform(X_train)
-
-    models_to_try = {
-        'Ridge': {
-            'model': get_model('Ridge', {}),
-            'X_train': X_train_transformed,
-            'X_test': X_train_transformed.copy()  # dummy for test
-        }
-    }
-
-    rmse, model, model_name, _, _ = choose_best_model(
+    best_model_results = choose_best_model(
         output_dir='.', 
-        y_train=y_train, 
-        models_to_try=models_to_try, 
+        train_df=train_df,
+        config=config,
         train_val_split=config['preprocessing']['train_val_split']
     )
 
-    assert model is not None
-    assert isinstance(rmse, float)
-    assert rmse > 0
+    assert best_model_results["model_object"] is not None
+    assert best_model_results["pipeline"] is not None
+    assert isinstance(best_model_results['rmse'], float)
+    assert best_model_results['rmse'] > 0
+
+def test_ARIMA_predict(train_and_test_df, config_path= "Configs/test_config.yaml"):
+    config = load_config(config_path)
+    train_df, test_df = train_and_test_df
+
+    best_model_results = choose_best_model(
+        output_dir='.', 
+        train_df=train_df,
+        config=config,
+        train_val_split=config['preprocessing']['train_val_split']
+    )
+
+    # Create a folder for saved models
+    joblib.dump(best_model_results["pipeline"], "tests/preprocessing_pipeline.pkl")
+    joblib.dump(best_model_results['model_object'], "tests/best_model.pkl")
+    
+    model, pipeline = load_models(folder='tests')
+    if model and pipeline:
+        preds = predict_batch(test_df, model, pipeline)
+        assert preds.shape[0] == test_df.shape[0]
+        assert not preds.isnull().any()
+
