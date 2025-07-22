@@ -3,11 +3,11 @@ import pandas as pd
 
 from preprocessing import * 
 
-def load_models():
+def load_models(folder='saved_models'):
     """Load saved models if they exist, otherwise return None"""
     try:
-        model = joblib.load("saved_models/best_model.pkl")
-        pipeline = joblib.load("saved_models/preprocessing_pipeline.pkl")
+        model = joblib.load(f"{folder}/best_model.pkl")
+        pipeline = joblib.load(f"{folder}/preprocessing_pipeline.pkl")
         return model, pipeline
     except FileNotFoundError:
         print("Warning: Saved models not found. Train models first.")
