@@ -101,14 +101,16 @@ models:
   # Time Series Models
   - type: MA1
     params: 
-      window: 1
+      AR_order: 0
       difference_order: 1
+      MA_order: 1
     scaling: false
 
   - type: AR
     params:
-      lags: 1
+      AR_order: 1
       difference_order: 1
+      MA_order: 0
     scaling: false
 
 training:

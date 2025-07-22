@@ -49,24 +49,12 @@ def get_pipeline_for_model(model, config):
 def create_timeseries_preprocessing_pipeline(model_type, **kwargs):
     """Create preprocessing pipeline for time series models"""
     
-    if model_type in ["MA", "MA1"]:  # Handle both MA and MA1
+    if model_type in ["MA", "MA1", "AR"]:  # Handle both MA and MA1
         return Pipeline([
-            ('ma_transform', MADataTransformer(
-                window=kwargs.get('window', 1),
-                difference_order=kwargs.get('difference_order', 1)
+            ('ma_transform', ARIMATransformer(
             ))
         ])
-    
-    elif model_type == "AR":
-        return Pipeline([
-            ('ar_transform', ARDataTransformer(
-                lags=kwargs.get('lags', 1),
-                difference_order=kwargs.get('difference_order', 1),
-                add_lags=kwargs.get('add_lags', True)
-            ))
-        ])
-
-    
+        
     else:
         raise ValueError(f"Unknown time series model type: {model_type}")
 
@@ -115,11 +103,18 @@ class StandardTransformerWrapper(BaseEstimator, TransformerMixin):
     
     def transform(self, X, y):
         X_transformed = self.sklearn_pipeline.transform(X)
-        return X_transformed, y
-    
+        return X_transformed
+
     def fit_transform(self, X, y):
         X_transformed = self.sklearn_pipeline.fit_transform(X, y)
-        return X_transformed, y
+        return X_transformed
+    
+
+class ARIMATransformer(BaseEstimator, TransformerMixin):
+    def fit(self, X, y=None):
+        return self
+    def transform(self, X):
+        return np.array(X)
 
 
 class MADataTransformer(BaseEstimator, TransformerMixin):
