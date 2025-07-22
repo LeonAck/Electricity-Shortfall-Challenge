@@ -1,9 +1,5 @@
 import numpy as np
-from statsmodels.tsa.ar_model import AutoReg
 from statsmodels.tsa.arima.model import ARIMA
-from sklearn.base import BaseEstimator, RegressorMixin
-import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
 
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet, BayesianRidge, SGDRegressor
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor, AdaBoostRegressor
@@ -42,60 +38,7 @@ class DifferencedARIMAWrappedModel:
         y_diff_forecast = self.model.forecast(steps=steps)
         forecast = self.last_observed_value + np.cumsum(y_diff_forecast)
         return forecast
-
-class MA_ModelWrapper:
-    def __init__(self, q=2):
-        self.q = q
-        self.model = None
-        self.fitted = None
-
-    def fit(self, y):
-        self.model = ARIMA(y, order=(0, self.q, 0))
-        self.fitted = self.model.fit()
-
-    def predict(self, start, end):
-        return self.fitted.predict(start=start, end=end)
     
-    def forecast(self, steps):
-        return self.fitted.forecast(steps=steps)
-    
-
-class ARModelWrapper:
-    def __init__(self, lags=1):
-        """
-        AR model using ARIMA(order=(p, 0, 0)), where p = number of lags.
-        """
-        self.lags = lags
-        self.model = None
-        self.fitted_model = None
-
-    def fit(self, y):
-        """
-        Fits ARIMA model with order=(lags, 0, 0), i.e., pure AR model.
-        """
-        self.model = ARIMA(y, order=(self.lags, 0, 0))
-        self.fitted_model = self.model.fit()
-
-    def predict(self, start, end):
-        """
-        Predict from index `start` to `end`.
-        """
-        return self.fitted_model.predict(start=start, end=end)
-    
-    def forecast(self, steps):
-        return self.fitted.forecast(steps=steps)
-    
-    
-class SklearnModelWrapper:
-    def __init__(self, model_cls):
-        self.model = model_cls()
-
-    def fit(self, X, y):
-        self.model.fit(X, y)
-
-    def predict(self, X):
-        return self.model.predict(X)
-
 
 def get_model(model_type: str, params: dict):
     if model_type == 'LinearRegression':

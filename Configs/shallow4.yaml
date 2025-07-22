@@ -121,6 +121,7 @@ training:
 logging:
   tracking_tool: mlflow
   artifact_dir: artifacts/${run.run_id}
+  plots: false
 
 mlflow:
   enabled: true

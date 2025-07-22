@@ -13,7 +13,6 @@ def main(config_path):
     run_id = generate_run_id(config)
     output_dir = create_output_dir(run_name, run_id)
 
-    target_column = config['data']['target_column']
     print("Run name:", run_name)
     print("Run ID:", run_id)
     print("Data laden...")

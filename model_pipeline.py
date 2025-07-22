@@ -1,12 +1,8 @@
-import pandas as pd
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from plots import plot_predictions
 from models import get_model
 from preprocessing import get_pipeline_for_model
-
-import os
-import joblib
 
 
 def split_data(X_train: np.array, y_train: np.array, train_val_split=0.2):
@@ -55,13 +51,15 @@ def choose_best_model(output_dir, train_df, config, train_val_split=0.2):
         # Predict, evaluate and plot
         predictions = trained_model.predict(X_val)
         rmse = evaluate_model(y_val, predictions)
-        plot_predictions(y_val, predictions, model['type'], output_dir, dataset_name="validation")
+
+        if config['logging']['plots']:
+            plot_predictions(y_val, predictions, model['type'], output_dir, dataset_name="validation")
         
         print(f"Model: {model['type']}, RMSE: {rmse:.4f}")
 
         if rmse < best_rmse:
             best_rmse = rmse
-            best_model = model
+            best_model = trained_model
             best_model_name = model['type']
             best_X_train = X_train
             best_pipeline = pipeline
