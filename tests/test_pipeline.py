@@ -60,7 +60,7 @@ def test_ARIMA_predict(train_and_test_df, config_path= "Configs/test_config.yaml
     joblib.dump(best_model_results["pipeline"], "tests/preprocessing_pipeline.pkl")
     joblib.dump(best_model_results['model_object'], "tests/best_model.pkl")
     
-    model, pipeline = load_models()
+    model, pipeline = load_models(folder='tests')
     if model and pipeline:
         preds = predict_batch(test_df, model, pipeline)
         assert preds.shape[0] == test_df.shape[0]
