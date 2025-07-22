@@ -13,22 +13,35 @@ from sklearn.svm import SVR
 from xgboost import XGBRegressor 
 
 
-class SMA_ModelWrapper:
-    def __init__(self, window=3):
-        self.window = window
-        self.y = None
+class DifferencedARIMAWrappedModel:
+    def __init__(self, AR_order, difference_order, MA_order):
+        self.order = [AR_order, difference_order, MA_order]  # e.g., (1, 1, 0) for first differencing
+        self.model = None
+        self.last_observed_value = None
 
-    def fit(self, y):
-        self.y = y
+    def fit(self, X, y):
+        # Store last value to reverse differencing later
+        self.last_observed_value = y.iloc[0] if hasattr(y, "iloc") else y[0]
 
-    def predict(self, start, end):
-        preds = []
-        for i in range(start, end + 1):
-            if i < self.window:
-                preds.append(np.mean(self.y[:i]))  # partial window
-            else:
-                preds.append(np.mean(self.y[i - self.window:i]))
-        return np.array(preds)
+        # Apply first differencing
+        y_diff = np.diff(y)
+
+        # Fit ARIMA on differenced series (X is ignored)
+        self.model = ARIMA(y_diff, order=(self.order[0], 0, self.order[2])).fit()
+        return self
+
+    def predict(self, X):
+        # Predict differenced values
+        y_pred_diff = self.model.predict(start=1, end=len(X))
+
+        # Reverse differencing (i.e., cumulative sum)
+        y_pred = np.r_[self.last_observed_value, y_pred_diff].cumsum()
+        return y_pred[1:]  # exclude initial value used for cumsum
+    
+    def forecast(self, steps):
+        y_diff_forecast = self.model.forecast(steps=steps)
+        forecast = self.last_observed_value + np.cumsum(y_diff_forecast)
+        return forecast
 
 class MA_ModelWrapper:
     def __init__(self, q=2):
@@ -127,14 +140,8 @@ def get_model(model_type: str, params: dict):
     elif model_type == 'SVR':
         return SVR(**params)
 
-    elif model_type == 'AR':
-        return ARModelWrapper(**params)  # Return AR model wrapper class
-
-    elif model_type == 'MA':
-        return MA_ModelWrapper(**params)  # Return MA model wrapper class
-    
-    elif model_type == 'SMA':
-        return SMA_ModelWrapper(**params)  # Return SMA model wrapper class
+    elif model_type in ['AR', 'MA', 'MA1']:
+        return DifferencedARIMAWrappedModel(**params)  # Return AR/MA model wrapper class
     
     else:
         raise ValueError(f"Unknown model type: {model_type}")
