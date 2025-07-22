@@ -5,13 +5,12 @@ from scripts.inference import predict_batch
 
 import pandas as pd
 import os
-import joblib
 
 def main(config_path):
     config = load_config(config_path=os.path.join(os.getcwd(), config_path))
     run_name = config['run']['run_name']
     run_id = generate_run_id(config)
-    output_dir = create_output_dir(run_name, run_id)
+    output_dir = create_output_dir(run_name, run_id, config)
 
     print("Run name:", run_name)
     print("Run ID:", run_id)
