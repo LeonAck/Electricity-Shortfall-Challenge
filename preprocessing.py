@@ -2,8 +2,63 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.impute import KNNImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+
 import pandas as pd
 import numpy as np
+
+
+def get_pipeline_for_model(model, config):
+
+    if model["type"] in ["AR", "MA1"]:
+        # Extract parameters from the config structure
+        params = model.get('params', {})
+        
+        # Return data transformation pipeline only
+        return create_timeseries_preprocessing_pipeline(
+            model_type=model["type"],
+            **params  # Unpack all parameters from the config
+        )
+    
+    elif model["type"] in [
+        'LinearRegression',
+        'RandomForest',
+        'Ridge',
+        'Lasso',
+        'ElasticNet',
+        'BayesianRidge',
+        'SGDRegressor',
+        'ExtraTreesRegressor',
+        'GradientBoostingRegressor',
+        'XGBRegressor',
+        'DecisionTreeRegressor',
+        'AdaBoostRegressor',
+        'KNeighborsRegressor',
+        'SVR'
+        ]:
+        sklearn_pipeline = create_preprocessing_pipeline(imputer=get_imputer(config), 
+                                             freq=config['preprocessing']['freq'],
+                                             fill_method=config['preprocessing']['fill_method'], 
+                                             add_time_dummies=config['preprocessing']['add_time_dummies'], 
+                                             scaling=model['scaling'])
+        
+        return StandardTransformerWrapper(sklearn_pipeline)
+
+    else:
+        raise ValueError(f"No preprocessing pipeline defined for model_type: {model['type']}")
+
+
+def create_timeseries_preprocessing_pipeline(model_type, **kwargs):
+    """Create preprocessing pipeline for time series models"""
+    
+    if model_type in ["MA", "MA1", "AR"]:  # Handle both MA and MA1
+        return Pipeline([
+            ('ma_transform', ARIMATransformer(
+            ))
+        ])
+        
+    else:
+        raise ValueError(f"Unknown time series model type: {model_type}")
+
 
 # Creating complete preprocessing pipelines with different imputation methods
 def create_preprocessing_pipeline(imputer, freq='3h', 
@@ -38,11 +93,35 @@ def create_preprocessing_pipeline(imputer, freq='3h',
 
     return Pipeline(steps)
 
+# Modify your existing scikit-learn pipeline creation
+class StandardTransformerWrapper(BaseEstimator, TransformerMixin):
+    def __init__(self, sklearn_pipeline):
+        self.sklearn_pipeline = sklearn_pipeline
+    
+    def fit(self, X, y=None):
+        self.sklearn_pipeline.fit(X, y)
+        return self
+    
+    def transform(self, X, y=None):
+        X_transformed = self.sklearn_pipeline.transform(X)
+        return X_transformed
+
+    def fit_transform(self, X, y=None):
+        X_transformed = self.sklearn_pipeline.fit_transform(X)
+        return X_transformed
+    
+
+class ARIMATransformer(BaseEstimator, TransformerMixin):
+    def fit(self, X, y=None):
+        return self
+    def transform(self, X):
+        return X
+
 def get_imputer(config):
     imp_cfg = config['preprocessing']['imputer']
     
     if imp_cfg['type'] == 'TimeAwareKNNImputer':
-        imputer = TimeAwareKNNImputer(**imp_cfg['params'])
+        imputer = TimeAwareKNNImputer(column='Valencia_pressure', **imp_cfg['params'])
     else:
         raise ValueError(f"Onbekende imputer: {imp_cfg['type']}")
     return imputer
@@ -68,15 +147,13 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
         df = X.copy()
         
         # Convert Valencia_wind_deg to numerical values if it exists
-        if 'Valencia_wind_deg' in df.columns:
-            df['Valencia_wind_deg_cat'] = df['Valencia_wind_deg'].astype(str).str.replace('level_', '').astype(float)
-            df = df.drop(columns=['Valencia_wind_deg'])
+        if 'Valencia_wind_deg' in df.columns and df['Valencia_wind_deg'].dtype != 'float':
+            df['Valencia_wind_deg'] = df['Valencia_wind_deg'].astype(str).str.replace('level_', '').astype(float)
 
         # Convert Seville_pressure to numerical values if it exists
-        if 'Seville_pressure' in df.columns:
-            df['Seville_pressure_cat'] = df['Seville_pressure'].astype(str).str.replace('sp', '').astype(float)
-            df = df.drop(columns=['Seville_pressure'])
-        
+        if 'Seville_pressure' in df.columns and df['Seville_pressure'].dtype != 'float':
+            df['Seville_pressure'] = df['Seville_pressure'].astype(str).str.replace('sp', '').astype(float)
+
         # Ensure time is datetime type
         if 'time' in df.columns:
             df = self._set_datetime_as_index(df)
@@ -84,6 +161,8 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
         # Remove any unwanted columns
         if 'Unnamed: 0' in df.columns:
             df = df.drop(columns=['Unnamed: 0'])
+
+        print(self.add_time_dummies, df.columns)
 
         # Add cyclical time features
         if self.add_time_dummies == "cyclical":
@@ -131,21 +210,22 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
 
     def _add_cyclical_time_features(self, df):
         # Extract time components
-        df['hour'] = df.index.hour
-        df['day_of_week'] = df.index.dayofweek
-        df['month'] = df.index.month
+        hour = df.index.hour
+        day_of_week = df.index.dayofweek
+        month = df.index.month
 
         # Add cyclical encoding
-        df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
-        df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
+        df['hour_sin'] = np.sin(2 * np.pi * hour / 24)
+        df['hour_cos'] = np.cos(2 * np.pi * hour / 24)
 
-        df['dow_sin'] = np.sin(2 * np.pi * df['day_of_week'] / 7)
-        df['dow_cos'] = np.cos(2 * np.pi * df['day_of_week'] / 7)
+        df['dow_sin'] = np.sin(2 * np.pi * day_of_week / 7)
+        df['dow_cos'] = np.cos(2 * np.pi * day_of_week / 7)
 
-        df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
-        df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
+        df['month_sin'] = np.sin(2 * np.pi * month / 12)
+        df['month_cos'] = np.cos(2 * np.pi * month / 12)
 
         return df
+
 
 
 class ToNumpyArray(BaseEstimator, TransformerMixin):
@@ -157,16 +237,19 @@ class ToNumpyArray(BaseEstimator, TransformerMixin):
 
 # Imputation Methods
 
-# 1. Hour/ day/ month median imputer
+# 1. Hour/ day/ month median imputer : need to check whether it works
 
 class ValenciaPressureImputer(BaseEstimator, TransformerMixin):
+    def __init__(self, column=None):
+        self.column = column
+
     def fit(self, X, y=None):
         df = X.copy()
         df['hour'] = df.index.hour
         df['day'] = df.index.dayofweek
         df['month'] = df.index.month
 
-        self.group_medians_ = df.groupby(['hour', 'day', 'month'])['Valencia_pressure'].median()
+        self.group_medians_ = df.groupby(['hour', 'day', 'month'])[self.column].median()
         return self
 
     def transform(self, X):
@@ -176,17 +259,17 @@ class ValenciaPressureImputer(BaseEstimator, TransformerMixin):
         df['month'] = df.index.month
 
         def impute(row):
-            if pd.isna(row['Valencia_pressure']):
+            if pd.isna(row[self.column]):
                 return self.group_medians_.get((row['hour'], row['day'], row['month']), np.nan)
-            return row['Valencia_pressure']
+            return row[self.column]
 
-        df['Valencia_pressure'] = df.apply(impute, axis=1)
+        df[self.column] = df.apply(impute, axis=1)
         df.drop(['hour', 'day', 'month'], axis=1, inplace=True)
         return df
 
 # 2. Time-based Method: Interpolation with Fallback
 class InterpolationImputer(BaseEstimator, TransformerMixin):
-    def __init__(self, column='Valencia_pressure', max_gap=24):
+    def __init__(self, column=None, max_gap=24):
         """
         Time-based interpolation with fallback to pattern-based imputation
         
@@ -215,6 +298,10 @@ class InterpolationImputer(BaseEstimator, TransformerMixin):
     def transform(self, X):
         df = X.copy()
         
+        # Skip if the column doesn't exist or has no missing values
+        if self.column == None or self.column not in df.columns or not df[self.column].isna().any():
+            return df
+
         # First identify missing value locations
         missing_mask = df[self.column].isna()
         
@@ -274,7 +361,7 @@ class InterpolationImputer(BaseEstimator, TransformerMixin):
 
 # 3. ML-based Method: KNN Imputation with Time Features
 class TimeAwareKNNImputer(BaseEstimator, TransformerMixin):
-    def __init__(self, column='Valencia_pressure', n_neighbors=5):
+    def __init__(self, column=None, n_neighbors=5):
         """
         KNN-based imputation that incorporates time features
         
@@ -294,7 +381,7 @@ class TimeAwareKNNImputer(BaseEstimator, TransformerMixin):
         df = X.copy()
         
         # Skip if the column doesn't exist or has no missing values
-        if self.column not in df.columns or not df[self.column].isna().any():
+        if self.column == None or self.column not in df.columns or not df[self.column].isna().any():
             return df
         
         # Create time-based features to help with imputation
@@ -330,7 +417,7 @@ class TimeAwareKNNImputer(BaseEstimator, TransformerMixin):
 
 # 4. Simplified Grouping Method: Hour and Day of Week
 class SimplifiedPatternImputer(BaseEstimator, TransformerMixin):
-    def __init__(self, column='Valencia_pressure'):
+    def __init__(self, column=None):
         """
         Pattern-based imputation using hierarchical grouping approach
         
@@ -355,10 +442,11 @@ class SimplifiedPatternImputer(BaseEstimator, TransformerMixin):
     def transform(self, X):
         df = X.copy()
         
+
         # Skip if the column doesn't exist or has no missing values
-        if self.column not in df.columns or not df[self.column].isna().any():
+        if self.column == None or self.column not in df.columns or not df[self.column].isna().any():
             return df
-            
+        
         df['hour'] = df.index.hour
         df['day'] = df.index.dayofweek
         
@@ -387,86 +475,16 @@ class SimplifiedPatternImputer(BaseEstimator, TransformerMixin):
         
         return df
 
-
-
-
-
-def preprocess_data(df):
-
-    # Convert Valencia_wind_deg to numerical values
-    df['Valencia_wind_deg_cat'] = df['Valencia_wind_deg'].astype(str).str.replace('level_', '').astype(int)
-    df = df.drop(columns=['Valencia_wind_deg'])
-
-    # Convert Seville_pressure to numerical values
-    df['Seville_pressure_cat'] = df['Seville_pressure'].astype(str).str.replace('sp', '').astype(int)
-    df = df.drop(columns=['Seville_pressure'])
-
-    
-    # Ensure time is datetime type
-    df = set_datetime_as_index(df)
-    
-    # Remove any unwanted columns
-    if 'Unnamed: 0' in df.columns:
-        df = df.drop(columns=['Unnamed: 0'])
-
-    return df
-
-def set_datetime_as_index(df, freq='3h', fill_method='interpolate'):
-    """
-    Convert 'time' column to datetime index, reindex to regular intervals,
-    and impute missing rows.
-
-    Parameters:
-    - df: pd.DataFrame with a 'time' column
-    - freq: str, frequency string for datetime (default='3H')
-    - fill_method: str, one of ['interpolate', 'ffill', 'bfill', 'zero']
-
-    Returns:
-    - DataFrame with datetime index at regular intervals and missing values filled
-    """
-    import pandas as pd
-
-    # Convert and sort time
-    df['time'] = pd.to_datetime(df['time'])
-    df = df.set_index('time')
-
-    # Create complete datetime index
-    full_index = pd.date_range(start=df.index.min(), end=df.index.max(), freq=freq)
-
-    # Reindex
-    df = df.reindex(full_index)
-
-    # Identify fully missing rows
-    fully_missing_mask = df.isna().all(axis=1)
-
-    # Apply imputation only to fully missing rows
-    if fill_method == 'interpolate':
-        df.loc[fully_missing_mask] = df.interpolate().loc[fully_missing_mask]
-    elif fill_method == 'ffill':
-        df.loc[fully_missing_mask] = df.ffill().loc[fully_missing_mask]
-    elif fill_method == 'bfill':
-        df.loc[fully_missing_mask] = df.bfill().loc[fully_missing_mask]
-    elif fill_method == 'zero':
-        df.loc[fully_missing_mask] = 0
-    else:
-        raise ValueError("Unsupported fill_method. Choose from ['interpolate', 'ffill', 'bfill', 'zero'].")
-
-    df = df.asfreq('3h')
-
-    return df
-
-
-
     
 # 2. ML-based Method: KNN Imputation with Time Features
-class TimeAwareKNNImputer(BaseEstimator, TransformerMixin):
-    def __init__(self, n_neighbors=5):
-        """
+"""class TimeAwareKNNImputer(BaseEstimator, TransformerMixin):
+    def __init__(self, column = None, n_neighbors=5):
+        ""
         KNN-based imputation that incorporates time features
         
         Parameters:
         n_neighbors (int): Number of neighbors to use for KNN imputation
-        """
+        ""
         self.n_neighbors = n_neighbors
         self.imputer = KNNImputer(n_neighbors=n_neighbors)
     
@@ -508,7 +526,8 @@ class TimeAwareKNNImputer(BaseEstimator, TransformerMixin):
                 'month_sin', 'month_cos'], axis=1, inplace=True)
         
         return df
-
+"""
+        
 def check_nan_in_column(df, column):
     """
     Checks the number of NaN values in a specific column.
