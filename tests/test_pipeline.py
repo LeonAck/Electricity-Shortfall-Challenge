@@ -6,6 +6,10 @@ import joblib
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+print(os.getcwd())
+print(os.path.exists('configs/shallow4.yaml'))
+print(os.listdir('.'))
+
 from scripts.data_loading import load_data
 from scripts.config_and_logging import load_config
 from scripts.model_pipeline import choose_best_model
@@ -14,8 +18,15 @@ from scripts.inference import load_models, predict_batch
 
 @pytest.fixture
 def config():
+    # Get the project root directory (where the tests are running from)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_path = os.path.join(project_root, 'configs', 'shallow4.yaml')
+
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Config file not found at {config_path}")
+
     # Adjust path if needed
-    return load_config('configs/shallow4.yaml')
+    return load_config(config_path)
 
 @pytest.fixture
 def train_and_test_df(config):

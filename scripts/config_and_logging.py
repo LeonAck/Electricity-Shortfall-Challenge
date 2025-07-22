@@ -15,8 +15,8 @@ def generate_run_id(config):
     run_name = config["run"].get("run_name", "run")
     return f"_{timestamp}"
 
-def create_output_dir(run_name, run_id):
-    output_dir = os.path.join(f"output/{run_name}/", run_id)
+def create_output_dir(run_name, run_id, config):
+    output_dir = os.path.join(f"{config['output']['saved_models_folder']}/{run_name}/", run_id)
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
 
