@@ -39,5 +39,5 @@ if __name__ == "__main__":
     # Example test data
     df = pd.read_csv("Data/Data_raw/df_test.csv")
     preds = predict_batch(df)
-    preds.to_csv("predictions.csv")
+    preds.to_csv("Output/predictions.csv")
     print("✅ Predictions saved.")
