@@ -1,25 +1,44 @@
-# configs/energy_forecasting.yaml
+# configs/shallow4.yaml
 
 run:
   run_name: shallow4
   seed: &seed 42
   submit: false
-  mlflow_log: true
+  save_model: false
+
+logging:
+  mlflow_log: false
+  tracking_tool: mlflow
+  artifact_dir: artifacts/${run.run_id}
+  
+output:
+  save_model: true
+  output_folder: 'output'
+  saved_models_folder: 'saved_models'
+  saved_models_filename: 'best_model.pkl'
+  saved_pipeline_filename: 'preprocessing_pipeline.pkl'
+  plots: false
+  sample_submission_filename: 'sample_submission.csv'
+
+mlflow:
+  enabled: true
+  experiment_name: "energy_forecasting"
+  tracking_uri: "file:./mlruns" 
 
 data:
-  data_path: 'Data/Data_raw/'
+  data_path: 'data/data_raw/'
   train_path: 'df_train.csv'
   test_path: 'df_test.csv'
   submission_path: 'sample_submission_load_shortfall.csv'
   target_column: load_shortfall_3h
 
 preprocessing:
+  column_to_impute: 'Valencia_pressure'
   imputer:
     type: TimeAwareKNNImputer
     params:
       n_neighbors: 5
   freq: '3h'
-  fill_method: 'interpolate'
   add_time_dummies: 'cyclical'
   train_val_split: 0.2
 
@@ -112,18 +131,3 @@ models:
       difference_order: 1
       MA_order: 0
     scaling: false
-
-training:
-  early_stopping_rounds: 10
-  batch_size: 64    # alleen relevant voor neural nets
-  epochs: 50        # idem
-
-logging:
-  tracking_tool: mlflow
-  artifact_dir: artifacts/${run.run_id}
-  plots: false
-
-mlflow:
-  enabled: true
-  experiment_name: "energy_forecasting"
-  tracking_uri: "file:./mlruns" 

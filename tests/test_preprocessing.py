@@ -7,9 +7,9 @@ import sys
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from preprocessing import WeatherDataPreprocessor, create_preprocessing_pipeline, StandardTransformerWrapper, SimplifiedPatternImputer, TimeAwareKNNImputer
-from data_loading import load_data
-from config_and_logging import load_config
+from scripts.preprocessing import WeatherDataPreprocessor, create_preprocessing_pipeline, StandardTransformerWrapper, SimplifiedPatternImputer, TimeAwareKNNImputer
+from scripts.data_loading import load_data
+from scripts.config_and_logging import load_config
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 
@@ -27,7 +27,7 @@ def sample_df():
 @pytest.fixture
 def config():
     # Adjust path if needed
-    return load_config('Configs/test_config.yaml')
+    return load_config('configs/test_config.yaml')
 
 @pytest.fixture
 def train_and_test_df(config):
@@ -37,6 +37,9 @@ def train_and_test_df(config):
 # ---------- Preprocessing pipeline  tests ----------
 
 def test_pipeline_default_structure():
+    """
+    Test that the preprocessing pipeline has the expected structure.
+    """
     pipeline = create_preprocessing_pipeline(imputer=SimpleImputer(strategy='mean'))
     assert isinstance(pipeline, Pipeline)
     step_names = [name for name, _ in pipeline.steps]
@@ -44,6 +47,9 @@ def test_pipeline_default_structure():
 
 
 def test_pipeline_runs_on_dummy_data():
+    """
+    Test that the preprocessing pipeline can run on dummy data.
+    """
     df = pd.DataFrame({
         'temperature': [np.nan, 20, 21, 19],
         'humidity': [30, np.nan, 40, 45],
@@ -59,6 +65,9 @@ def test_pipeline_runs_on_dummy_data():
 
 
 def test_pipeline_scaling_included():
+    """
+    Test that scaling is included in the pipeline when specified.
+    """
     imputer = SimpleImputer(strategy='mean')
     pipeline = create_preprocessing_pipeline(imputer=imputer, scaling=True)
     step_names = [name for name, _ in pipeline.steps]
@@ -66,6 +75,9 @@ def test_pipeline_scaling_included():
 
 
 def test_pipeline_scaling_excluded():
+    """
+    Test that scaling is excluded from the pipeline when specified.
+    """
     imputer = SimpleImputer(strategy='mean')
     pipeline = create_preprocessing_pipeline(imputer=imputer, scaling=False)
     step_names = [name for name, _ in pipeline.steps]
@@ -74,6 +86,9 @@ def test_pipeline_scaling_excluded():
 # ---------- Preprocessing tests ----------
 
 def test_pipeline_other_imputer():
+    """
+    Test that the pipeline can use a different imputer than TimeAwareKNNImputer.
+    """
     df = pd.DataFrame({
         'temperature': [np.nan, 20, 21, 19],
         'humidity': [30, np.nan, 40, 45],
@@ -88,6 +103,9 @@ def test_pipeline_other_imputer():
 
 
 def test_time_dummies_affect_output_shape():
+    """
+    Test that adding cyclical time features adds 6 columns in the output array
+    """
     imputer = TimeAwareKNNImputer()
 
     df = pd.DataFrame({

@@ -1,22 +1,21 @@
 import os
 import sys
 import pytest
-import pandas as pd
 import joblib
 
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from data_loading import load_data
-from config_and_logging import load_config
-from model_pipeline import choose_best_model
-from inference import load_models, predict_batch
+from scripts.data_loading import load_data
+from scripts.config_and_logging import load_config
+from scripts.model_pipeline import choose_best_model
+from scripts.inference import load_models, predict_batch
 
 
 @pytest.fixture
 def config():
     # Adjust path if needed
-    return load_config('Configs/shallow4.yaml')
+    return load_config('configs/shallow4.yaml')
 
 @pytest.fixture
 def train_and_test_df(config):
@@ -31,13 +30,15 @@ def test_load_config_and_data(config, train_and_test_df):
     assert config['data']['target_column'] in train_df.columns
 
 def test_choose_best_model_logic(config, train_and_test_df):
+    """
+    Test the logic of choosing the best model based on RMSE.
+    """
     train_df, _ = train_and_test_df
 
     best_model_results = choose_best_model(
         output_dir='.', 
         train_df=train_df,
-        config=config,
-        train_val_split=config['preprocessing']['train_val_split']
+        config=config
     )
 
     assert best_model_results["model_object"] is not None
@@ -45,15 +46,17 @@ def test_choose_best_model_logic(config, train_and_test_df):
     assert isinstance(best_model_results['rmse'], float)
     assert best_model_results['rmse'] > 0
 
-def test_ARIMA_predict(train_and_test_df, config_path= "Configs/test_config.yaml"):
+def test_ARIMA_predict(train_and_test_df, config_path= "configs/test_config.yaml"):
+    """
+    Test the ARIMA model prediction functionality.
+    """
     config = load_config(config_path)
     train_df, test_df = train_and_test_df
 
     best_model_results = choose_best_model(
         output_dir='.', 
         train_df=train_df,
-        config=config,
-        train_val_split=config['preprocessing']['train_val_split']
+        config=config
     )
 
     # Create a folder for saved models
