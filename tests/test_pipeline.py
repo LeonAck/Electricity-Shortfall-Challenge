@@ -3,18 +3,34 @@ import sys
 import pytest
 import joblib
 
-# Add the parent directory (project root) to Python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Find the actual project root by looking for the configs directory
+def find_project_root():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Check current directory and parent directories
+    check_dirs = [
+        current_dir,  # tests directory
+        os.path.dirname(current_dir),  # parent directory
+        os.getcwd(),  # current working directory
+    ]
+    
+    for directory in check_dirs:
+        configs_path = os.path.join(directory, 'configs')
+        if os.path.exists(configs_path):
+            print(f"Found project root at: {directory}")
+            return directory
+    
+    raise FileNotFoundError("Could not find project root with configs directory")
 
-
-# If we're in GitHub Actions with double-nested directory, adjust the path
-if 'Electricity-Shortfall-Challenge' in project_root and project_root.endswith('Electricity-Shortfall-Challenge'):
-    # Check if configs exists in current location
-    if not os.path.exists(os.path.join(project_root, 'configs')):
-        # We're probably in the double-nested CI directory, use current working directory
-        project_root = os.getcwd()
-
+project_root = find_project_root()
 sys.path.insert(0, project_root)
+
+print(f"=== DEBUG INFO ===")
+print(f"Project root: {project_root}")
+print(f"Current working directory: {os.getcwd()}")
+print(f"Contents of project root: {os.listdir(project_root)}")
+print(f"Configs directory contents: {os.listdir(os.path.join(project_root, 'configs'))}")
+print(f"==================")
 
 from scripts.data_loading import load_data
 from scripts.config_and_logging import load_config
