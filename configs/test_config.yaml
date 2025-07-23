@@ -1,0 +1,58 @@
+# configs/energy_forecasting.yaml
+
+run:
+  run_name: test_config
+  seed: &seed 42
+  submit: false
+
+logging:
+  mlflow_log: false
+  tracking_tool: mlflow
+  artifact_dir: artifacts/${run.run_id}
+  
+output:
+  save_model: true
+  output_folder: 'output'
+  saved_models_folder: 'saved_models'
+  saved_models_filename: 'best_model.pkl'
+  saved_pipeline_filename: 'preprocessing_pipeline.pkl'
+  plots: false
+  sample_submission_filename: 'sample_submission.csv'
+
+data:
+  data_path: 'data/data_raw/'
+  train_path: 'df_train.csv'
+  test_path: 'df_test.csv'
+  submission_path: 'sample_submission_load_shortfall.csv'
+  target_column: load_shortfall_3h
+
+preprocessing:
+  imputer:
+    type: TimeAwareKNNImputer
+    params:
+      n_neighbors: 5
+  freq: '3h'
+  add_time_dummies: 'cyclical'
+  train_val_split: 0.2
+
+models:
+
+  # Time Series Models
+  - type: MA1
+    params: 
+      AR_order: 0
+      difference_order: 1
+      MA_order: 1
+    scaling: false
+
+  - type: AR
+    params:
+      AR_order: 1
+      difference_order: 1
+      MA_order: 0
+    scaling: false
+
+mlflow:
+  enabled: true
+  experiment_name: "energy_forecasting"
+  tracking_uri: "file:./mlruns" 
