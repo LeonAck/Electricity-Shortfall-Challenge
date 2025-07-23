@@ -10,7 +10,6 @@ COPY requirements.txt .
 # Copy the project files
 COPY scripts/ ./scripts/
 COPY configs/ ./configs/
-COPY data/ ./data/
 
 RUN pip install --no-cache-dir -r requirements.txt
 
