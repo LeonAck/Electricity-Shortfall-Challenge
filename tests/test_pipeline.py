@@ -5,11 +5,16 @@ import joblib
 
 # Add the parent directory (project root) to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)
 
-print(os.getcwd())
-print(project_root)
-print(os.path.exists(os.path.join(project_root, 'configs/shallow4.yaml')))
+
+# If we're in GitHub Actions with double-nested directory, adjust the path
+if 'Electricity-Shortfall-Challenge' in project_root and project_root.endswith('Electricity-Shortfall-Challenge'):
+    # Check if configs exists in current location
+    if not os.path.exists(os.path.join(project_root, 'configs')):
+        # We're probably in the double-nested CI directory, use current working directory
+        project_root = os.getcwd()
+
+sys.path.insert(0, project_root)
 
 from scripts.data_loading import load_data
 from scripts.config_and_logging import load_config
@@ -21,7 +26,7 @@ from scripts.inference import load_models, predict_batch
 def config():
     # Get the project root directory (where the tests are running from)
     config_path = os.path.join(project_root, 'configs/shallow4.yaml')
-    
+
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found at {config_path}")
 
