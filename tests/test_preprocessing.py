@@ -4,11 +4,6 @@ import numpy as np
 import os
 import sys
 
-# Add the parent directory (project root) to Python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-sys.path.insert(0, project_root)
-
 from scripts.preprocessing import WeatherDataPreprocessor, create_preprocessing_pipeline, StandardTransformerWrapper, SimplifiedPatternImputer, TimeAwareKNNImputer
 from scripts.data_loading import load_data
 from scripts.config_and_logging import load_config
@@ -29,7 +24,7 @@ def sample_df():
 @pytest.fixture
 def config():
      # Get the project root directory (where the tests are running from)
-    config_path = os.path.join(project_root, 'Configs/test_config.yaml')
+    config_path = 'configs/test_config.yaml'
     
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found at {config_path}")
