@@ -26,10 +26,10 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
-      - name: List configs for debug
+      - name: List files for debug
         run: |
-          ls -la configs
-          
+          ls -laR
+
       - name: Run tests
         run: |
           PYTHONPATH=. pytest 
