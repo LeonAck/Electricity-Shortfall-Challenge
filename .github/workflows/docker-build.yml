@@ -29,6 +29,11 @@ jobs:
       - name: Run tests
         run: |
           PYTHONPATH=. pytest 
+          working-directory: ${{ github.workspace }}
+      
+      - name: List configs for debug
+        run: |
+          ls -la configs
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
