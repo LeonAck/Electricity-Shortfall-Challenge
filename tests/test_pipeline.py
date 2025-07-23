@@ -3,11 +3,6 @@ import sys
 import pytest
 import joblib
 
-# Add the parent directory (project root) to Python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-sys.path.insert(0, project_root)
-
 from scripts.data_loading import load_data
 from scripts.config_and_logging import load_config
 from scripts.model_pipeline import choose_best_model
@@ -17,7 +12,7 @@ from scripts.inference import load_models, predict_batch
 @pytest.fixture
 def config():
     # Get the project root directory (where the tests are running from)
-    config_path = os.path.join(project_root, 'Configs/shallow4.yaml')
+    config_path = 'configs/shallow4.yaml'
 
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found at {config_path}")
@@ -54,7 +49,7 @@ def test_choose_best_model_logic(config, train_and_test_df):
     assert isinstance(best_model_results['rmse'], float)
     assert best_model_results['rmse'] > 0
 
-def test_ARIMA_predict(train_and_test_df, config_path= "Configs/test_config.yaml"):
+def test_ARIMA_predict(train_and_test_df, config_path= "configs/test_config.yaml"):
     """
     Test the ARIMA model prediction functionality.
     """
