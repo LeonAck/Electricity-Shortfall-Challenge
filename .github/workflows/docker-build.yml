@@ -27,6 +27,7 @@ jobs:
           pip install pytest
 
       - name: Run tests
+        working-directory: ./Electricity-Shortfall-Challenge
         run: |
           pytest
 
