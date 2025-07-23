@@ -12,7 +12,7 @@ from scripts.inference import load_models, predict_batch
 @pytest.fixture
 def config():
     # Get the project root directory (where the tests are running from)
-    config_path = 'Configs/shallow4.yaml'
+    config_path = 'configs/shallow4.yaml'
 
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found at {config_path}")
@@ -49,7 +49,7 @@ def test_choose_best_model_logic(config, train_and_test_df):
     assert isinstance(best_model_results['rmse'], float)
     assert best_model_results['rmse'] > 0
 
-def test_ARIMA_predict(train_and_test_df, config_path= "Configs/test_config.yaml"):
+def test_ARIMA_predict(train_and_test_df, config_path= "configs/test_config.yaml"):
     """
     Test the ARIMA model prediction functionality.
     """

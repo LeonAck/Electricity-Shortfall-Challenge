@@ -26,7 +26,7 @@ mlflow:
   tracking_uri: "file:./mlruns" 
 
 data:
-  data_path: 'Data/Data_raw/'
+  data_path: 'data/data_raw/'
   train_path: 'df_train.csv'
   test_path: 'df_test.csv'
   submission_path: 'sample_submission_load_shortfall.csv'

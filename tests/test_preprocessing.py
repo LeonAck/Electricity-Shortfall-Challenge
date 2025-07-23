@@ -24,7 +24,7 @@ def sample_df():
 @pytest.fixture
 def config():
      # Get the project root directory (where the tests are running from)
-    config_path = 'Configs/test_config.yaml'
+    config_path = 'configs/test_config.yaml'
     
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found at {config_path}")
