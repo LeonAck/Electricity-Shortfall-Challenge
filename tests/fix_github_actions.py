@@ -49,3 +49,19 @@ except ImportError as e:
 # Simple test to see if this works
 def test_debug():
     assert True  # This will always pass, just to see the debug output
+
+@pytest.fixture
+def config():
+    # Get the project root directory (where the tests are running from)
+    config_path = os.path.join(project_root, 'configs/shallow4.yaml')
+
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Config file not found at {config_path}")
+
+    # Adjust path if needed
+    return load_config(config_path)
+
+@pytest.fixture
+def train_and_test_df(config):
+    train_df, test_df, _ = load_data(config)
+    return train_df, test_df
