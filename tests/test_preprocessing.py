@@ -7,14 +7,6 @@ import sys
 # Add the parent directory (project root) to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
-# If we're in GitHub Actions with double-nested directory, adjust the path
-if 'Electricity-Shortfall-Challenge' in project_root and project_root.endswith('Electricity-Shortfall-Challenge'):
-    # Check if configs exists in current location
-    if not os.path.exists(os.path.join(project_root, 'configs')):
-        # We're probably in the double-nested CI directory, use current working directory
-        project_root = os.getcwd()
-
 sys.path.insert(0, project_root)
 
 from scripts.preprocessing import WeatherDataPreprocessor, create_preprocessing_pipeline, StandardTransformerWrapper, SimplifiedPatternImputer, TimeAwareKNNImputer
@@ -37,7 +29,7 @@ def sample_df():
 @pytest.fixture
 def config():
      # Get the project root directory (where the tests are running from)
-    config_path = os.path.join(project_root, 'configs/test_config.yaml')
+    config_path = os.path.join(project_root, 'Configs/test_config.yaml')
     
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found at {config_path}")
