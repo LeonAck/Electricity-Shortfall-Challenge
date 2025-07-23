@@ -6,7 +6,11 @@ WORKDIR /app
 
 # Copy your requirements file and install dependencies
 COPY requirements.txt .
-COPY preprocessing.py .
+
+# Copy the project files
+COPY scripts/ ./scripts/
+COPY configs/ ./configs/
+COPY data/ ./data/
 
 RUN pip install --no-cache-dir -r requirements.txt
 
