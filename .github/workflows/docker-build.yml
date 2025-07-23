@@ -28,7 +28,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests/test_pipeline.py::test_debug -v -s
+          pytest 
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
