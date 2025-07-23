@@ -1,6 +1,6 @@
 import os
 import sys
-import pytest
+
 import joblib
 
 # Find the actual project root by looking for the configs directory
