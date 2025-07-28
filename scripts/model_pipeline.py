@@ -3,6 +3,7 @@ from sklearn.metrics import mean_squared_error
 from scripts.plots import plot_predictions
 from scripts.models import get_model
 from scripts.preprocessing import get_pipeline_for_model
+from scripts.cross_validation_and_tuning import get_search_type, get_split_type, get_param_grid
 
 # goed kijken hoe dit zit
 def split_data(X_train: np.array, y_train: np.array, train_val_split=0.2):
@@ -98,3 +99,50 @@ def evaluate_model(y_true, y_pred):
         y_pred: Predicted values from the model
     """
     return np.sqrt(mean_squared_error(y_true, y_pred))
+
+
+def train_evaluate_no_cross_val(model, config, X_train_new, y_train_new, X_val, y_val, output_dir, dataset_name="validation"):
+    pipeline = get_pipeline_for_model(model, config)
+    X_train_processed = pipeline.fit_transform(X_train_new)
+
+    model_type = get_model(model['type'], model['params'])
+    trained_model = model_type.fit(X_train_processed, y_train_new)
+
+    X_val_processed = pipeline.transform(X_val)
+
+    # Predict, evaluate and plot
+    predictions = trained_model.predict(X_val_processed)
+    rmse = evaluate_model(y_val, predictions)
+
+    if config['output']['plots']:
+        plot_predictions(y_val, predictions, model['type'], output_dir, dataset_name="validation")
+
+    return rmse, trained_model
+
+
+def train_evaluate_with_cross_val(model, config, X_train_new, y_train_new, X_val, y_val, output_dir):
+    pipeline = get_pipeline_for_model(model, config)
+    X_train_processed = pipeline.fit_transform(X_train_new)
+
+    model_type = get_model(model['type'], model['params'])
+    trained_model = model_type.fit(X_train_processed, y_train_new)
+
+    X_val_processed = pipeline.transform(X_val)
+
+    # Predict, evaluate and plot
+    predictions = trained_model.predict(X_val_processed)
+    rmse = evaluate_model(y_val, predictions)
+
+
+    return rmse, trained_model
+
+
+def tune_model_via_cv(model, config, X_train, y_train):
+    
+    tscv = get_split_type(config)(config['cv_settings']['n_splits'])
+
+    search_type = get_search_type(config)
+    param_grid = get_param_grid(model, config)
+    cv_search = search_type(model, param_grid, cv=tscv, scoring=config['cv_settings']['scoring_metric'])
+    cv_search.fit(X_train, y_train)
+    return cv_search.best_estimator_, cv_search.best_params_, cv_search.best_score_

@@ -1,9 +1,7 @@
 from scripts.data_loading import load_data
 from scripts.config_and_logging import load_config, generate_run_id, save_run_metadata, create_output_dir, log_to_mlflow, save_model_and_pipeline
 from scripts.model_pipeline import choose_best_model
-from scripts.inference import predict_batch
 
-import pandas as pd
 import os
 
 def main(config_path):
@@ -40,16 +38,6 @@ def main(config_path):
     if config['output']['save_model']:
         # Create a folder for saved models and save the best model and preprocessing pipeline
         save_model_and_pipeline(best_model_results["pipeline"], best_model_results['model_object'], config)
-
-    if config['run']['submit']:
-        # Train on full set and predict on test set
-        test_predictions = predict_batch(test_df, best_model_results['model_object'], best_model_results["pipeline"])
-
-        submission_df = pd.DataFrame(
-            test_predictions
-        )
-        submission_df.to_csv(f"{config['output']['output_folder']}/{config['output']['sample_submission_filename']}", index=False)
-        print(f"\nPredictions saved in '{config['output']['sample_submission_filename']}'")
 
 
 if __name__ == "__main__":
