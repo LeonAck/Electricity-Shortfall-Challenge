@@ -9,6 +9,7 @@ from sklearn.svm import SVR
 from xgboost import XGBRegressor 
 
 
+
 class DifferencedARIMAWrappedModel:
     def __init__(self, AR_order, difference_order, MA_order):
         self.order = [AR_order, difference_order, MA_order]  # e.g., (1, 1, 0) for first differencing

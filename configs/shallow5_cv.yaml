@@ -1,0 +1,186 @@
+# configs/shallow5_cv.yaml
+
+run:
+  run_name: shallow5_cv
+  seed: &seed 42
+  submit: false
+  save_model: false
+
+logging:
+  mlflow_log: false
+  tracking_tool: mlflow
+  artifact_dir: artifacts/${run.run_id}
+  
+output:
+  save_model: true
+  output_folder: 'output'
+  saved_models_folder: 'saved_models'
+  saved_models_filename: 'best_model.pkl'
+  saved_pipeline_filename: 'preprocessing_pipeline.pkl'
+  plots: false
+  sample_submission_filename: 'sample_submission.csv'
+
+mlflow:
+  enabled: true
+  experiment_name: "energy_forecasting"
+  tracking_uri: "file:./mlruns" 
+
+data:
+  data_path: 'data/data_raw/'
+  train_path: 'df_train.csv'
+  test_path: 'df_test.csv'
+  submission_path: 'sample_submission_load_shortfall.csv'
+  target_column: load_shortfall_3h
+
+preprocessing:
+  column_to_impute: 'Valencia_pressure'
+  imputer:
+    type: TimeAwareKNNImputer
+    params:
+      n_neighbors: 5
+  freq: '3h'
+  add_time_dummies: 'cyclical'
+  train_val_split: 0.2
+
+cv_settings:
+  use_cross_validation: true'
+  split_type: TimeSeriesSplit   # TimeSeriesSplit only
+  n_splits: 5
+  scoring: root_mean_squared_error
+  search_type: grid          # grid or random
+  random_search_n_iter: 20   # used only if search_type == random
+
+models:
+
+  - type: LinearRegression
+    cv: true
+    search: false
+    param_grid: {}
+    params: {}
+    scaling: true
+
+  - type: Ridge
+    cv: true
+    search: true
+    param_grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+    params:
+      alpha: 10.0
+      random_state: &seed 42
+    scaling: true
+
+  - type: Lasso
+    cv: true
+    search: true
+    param_grid:
+      alpha: [0.01, 0.1, 1.0, 10.0]
+    params:
+      alpha: 1.0
+      random_state: *seed
+    scaling: true
+
+  - type: ElasticNet
+    cv: true
+    search: true
+    param_grid:
+      alpha: [0.01, 0.1, 1.0]
+      l1_ratio: [0.1, 0.5, 0.9]
+    params:
+      alpha: 1.0
+      l1_ratio: 0.5
+      random_state: *seed
+    scaling: true
+  - type: RandomForest
+
+    cv: true
+    search: true
+    param_grid:
+      n_estimators: [50, 100, 200]
+      max_depth: [5, 10, 20]
+      min_samples_split: [2, 5]
+    params:
+      n_estimators: 100
+      max_depth: 10
+      random_state: *seed
+    scaling: false
+
+  - type: ExtraTrees
+    cv: true
+    search: true
+    param_grid:
+      n_estimators: [50, 100]
+      max_depth: [5, 10, null]
+    params:
+      n_estimators: 100
+      max_depth: 10
+      random_state: *seed
+    scaling: false
+
+  - type: GradientBoosting
+    cv: true
+    search: true
+    param_grid:
+      n_estimators: [50, 100]
+      max_depth: [3, 5]
+      learning_rate: [0.01, 0.1]
+    params:
+      n_estimators: 100
+      max_depth: 4
+      learning_rate: 0.1
+      random_state: *seed
+    scaling: false
+
+  - type: XGBoost
+    cv: true
+    search: true
+    param_grid:
+      n_estimators: [50, 100]
+      max_depth: [3, 5]
+      learning_rate: [0.01, 0.1]
+    params:
+      n_estimators: 100
+      max_depth: 4
+      learning_rate: 0.1
+      random_state: *seed
+    scaling: false
+
+  - type: KNN
+    cv: true
+    search: true
+    param_grid:
+      n_neighbors: [3, 5, 7, 9]
+    params:
+      n_neighbors: 8
+    scaling: true
+
+  - type: SVR
+    cv: true
+    search: true
+    param_grid:
+      C: [0.1, 1.0, 10.0]
+      gamma: ['scale', 'auto']
+    params:
+      kernel: 'rbf'
+      C: 10.0
+      gamma: 'scale'
+    scaling: true
+
+  - type: MA1
+    cv: false
+    search: false
+    param_grid: {}
+    params:
+      AR_order: 0
+      difference_order: 1
+      MA_order: 1
+    scaling: false
+
+  - type: AR
+    cv: false
+    search: false
+    param_grid: {}
+    params:
+      AR_order: 1
+      difference_order: 1
+      MA_order: 0
+    scaling: false
