@@ -82,5 +82,17 @@ def log_to_mlflow(config, output_dir, run_id, model_name, model_object, metrics,
 
 def save_model_and_pipeline(pipeline, model, config):
     os.makedirs(config['output']['saved_models_folder'], exist_ok=True)
-    joblib.dump(pipeline, f"{config['output']['saved_models_folder']}/{config['output']['saved_pipeline_filename']}")
-    joblib.dump(model, f"{config['output']['saved_models_folder']}/{config['output']['saved_models_filename']}")
+    if config["run"]["gcloud"]:
+        pipeline = joblib.load("pipeline.joblib")  # Your preprocessing
+        model = joblib.load("model.joblib")       # Your trained model
+
+        # Attach model to pipeline
+        pipeline.steps.append(("model", model))
+
+        # Save combined artifact
+        joblib.dump(pipeline, "combined_model.joblib")
+        os.system("gsutil cp combined_model.joblib gs://forecast_bucket_inference/models/v1/")
+        
+    else: 
+        joblib.dump(pipeline, f"{config['output']['saved_models_folder']}/{config['output']['saved_pipeline_filename']}")
+        joblib.dump(model, f"{config['output']['saved_models_folder']}/{config['output']['saved_models_filename']}")

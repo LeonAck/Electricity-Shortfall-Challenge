@@ -20,17 +20,12 @@ jobs:
         with:
           python-version: "3.11"
           cache: 'pip'
-          
+
       - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install --prefer-binary -r requirements.txt
           pip install pytest
-
-      - name: List installed packages for debugging
-        run: |
-          pip list
-          python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
 
       - name: Run tests
         run: |
@@ -51,3 +46,16 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/electricity_shortfall:latest
+
+
+      # Add these steps AFTER your Docker build/push
+      - name: Deploy to Cloud Run
+        if: github.ref == 'refs/heads/main'
+        uses: google-github-actions/deploy-cloudrun@main
+        with:
+          service: energy-forecast-service
+          image: eu.gcr.io/energy-forecast/energy-forecast-service:${{ github.sha }}
+          region: europe-north1
+          env_vars: MODEL_VERSION=v1
+          project_id: energy-forecast-467113
+          # No 'credentials' needed if using Workload Identity

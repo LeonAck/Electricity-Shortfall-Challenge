@@ -5,6 +5,7 @@ run:
   seed: &seed 42
   submit: false
   save_model: false
+  gcloud: true
 
 logging:
   mlflow_log: false
