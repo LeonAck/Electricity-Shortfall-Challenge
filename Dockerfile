@@ -12,7 +12,14 @@ COPY scripts/ ./scripts/
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your application code into the container
+# Add to your existing Dockerfile AFTER installing dependencies
+COPY app.py /app/
+RUN pip install flask google-cloud-storage
+
+# Set model version as ENV (will be overridden at deploy time)
+ENV MODEL_VERSION="v1"
+
+
 COPY . .
 
 # Specify the default command to run when the container starts
