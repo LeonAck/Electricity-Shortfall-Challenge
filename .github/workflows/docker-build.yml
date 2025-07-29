@@ -27,6 +27,8 @@ jobs:
           sudo apt-get install -y build-essential libatlas-base-dev
 
       - name: Upgrade pip and install dependencies with binary preference
+        env:
+          PIP_NO_BUILD_ISOLATION: 1
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install numpy --only-binary=numpy
