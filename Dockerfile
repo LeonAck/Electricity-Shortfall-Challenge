@@ -23,4 +23,4 @@ ENV MODEL_VERSION="v1"
 COPY . .
 
 # Specify the default command to run when the container starts
-CMD ["python", "main.py"]
+CMD ["python", "app.py"]
