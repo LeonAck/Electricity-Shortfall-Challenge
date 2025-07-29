@@ -2,7 +2,9 @@ name: Build and Deploy Model
 
 on:
   push:
-    branches: [ main ]
+    branches: 
+        - main
+        - clean_code
 
 jobs:
   deploy:
