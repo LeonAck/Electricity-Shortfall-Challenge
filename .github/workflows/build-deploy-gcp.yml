@@ -2,9 +2,7 @@ name: Build and Deploy Model
 
 on:
   push:
-    branches:
-        - main
-        - clean_code
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -21,7 +19,7 @@ jobs:
       - id: auth
         uses: google-github-actions/auth@v1
         with:
-          workload_identity_provider: projects/791992711848/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          workload_identity_provider: projects/YOUR_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider
           service_account: cloud-run-sa@energy-forecast-467113.iam.gserviceaccount.com
 
       # Set up gcloud CLI
