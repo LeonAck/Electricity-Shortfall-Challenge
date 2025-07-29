@@ -24,19 +24,17 @@ jobs:
       - name: Install system dependencies for numpy build
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libatlas-base-dev
+          sudo apt-get install -y build-essential libatlas-base-dev libopenblas-dev liblapack-dev gfortran
 
-      - name: Upgrade pip and install dependencies with binary preference
-        env:
-          PIP_NO_BUILD_ISOLATION: 1
+      - name: Upgrade pip and install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install numpy --only-binary=numpy
           pip install --prefer-binary -r requirements.txt
 
-      - name: List files for debug
+      - name: List installed packages for debugging
         run: |
-          ls -laR
+          pip list
+          python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
 
       - name: Run tests
         run: |
