@@ -29,6 +29,7 @@ jobs:
       - name: Upgrade pip and install dependencies with binary preference
         run: |
           python -m pip install --upgrade pip setuptools wheel
+          pip install numpy --only-binary=numpy
           pip install --prefer-binary -r requirements.txt
 
       - name: List files for debug
