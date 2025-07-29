@@ -1,0 +1,55 @@
+name: Build and Deploy Model
+
+on:
+  push:
+    branches:
+        - main
+        - clean_code
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'  # Required for Workload Identity Federation
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Authenticate to Google Cloud using Workload Identity
+      - id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: projects/791992711848/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: cloud-run-sa@energy-forecast-467113.iam.gserviceaccount.com
+
+      # Set up gcloud CLI
+      - uses: google-github-actions/setup-gcloud@v1
+
+      # Build and push Docker image using Google Cloud Build
+      - name: Build and Push Docker Image
+        run: |-
+          gcloud builds submit \
+            --region=europe-north1 \
+            --tag=eu.gcr.io/energy-forecast-467113/energy-forecast-service:${{ github.sha }}
+
+      # Deploy to Cloud Run
+      - name: Deploy to Cloud Run
+        run: |-
+          gcloud run deploy energy-forecast-service \
+            --image=eu.gcr.io/energy-forecast-467113/energy-forecast-service:${{ github.sha }} \
+            --region=europe-north1 \
+            --platform=managed \
+            --allow-unauthenticated \
+            --service-account=cloud-run-sa@energy-forecast-467113.iam.gserviceaccount.com \
+            --set-env-vars=MODEL_VERSION=v1 \
+            --project=energy-forecast-467113
+
+      # Optional: Clean up old revisions
+      - name: Clean up old revisions
+        run: |-
+          gcloud run services update-traffic energy-forecast-service \
+            --region=europe-north1 \
+            --cleanup \
+            --project=energy-forecast-467113
