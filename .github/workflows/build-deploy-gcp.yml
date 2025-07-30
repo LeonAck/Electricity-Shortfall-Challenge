@@ -34,7 +34,7 @@ jobs:
       - name: Build and Push Docker Image
         run: |-
           gcloud builds submit \
-            --region=europe-north1 \
+            --region=europe-west4 \
             --tag=eu.gcr.io/energy-forecast-467113/energy-forecast-service:${{ github.sha }}
 
       # Deploy to Cloud Run
@@ -42,7 +42,7 @@ jobs:
         run: |-
           gcloud run deploy energy-forecast-service \
             --image=eu.gcr.io/energy-forecast-467113/energy-forecast-service:${{ github.sha }} \
-            --region=europe-north1 \
+            --region=europe-west4 \
             --platform=managed \
             --allow-unauthenticated \
             --service-account=ccloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com \
@@ -53,6 +53,6 @@ jobs:
       - name: Clean up old revisions
         run: |-
           gcloud run services update-traffic energy-forecast-service \
-            --region=europe-north1 \
+            --region=europe-west4 \
             --cleanup \
             --project=energy-forecast-467113
