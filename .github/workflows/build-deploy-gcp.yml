@@ -31,14 +31,23 @@ jobs:
         with:
           workload_identity_provider: projects/791992711848/locations/global/workloadIdentityPools/github-pool/providers/github-provider
           service_account: cloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com
-          create_credentials_file: false  # Use Workload Identity Federation
-          export_default_credentials: true  # ← THIS IS CRITICAL
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/cloud-platform
+
 
       # Set up gcloud CLI
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: energy-forecast-467113
+
+      - name: Login with access token
+        run: |
+          echo "${{ steps.auth.outputs.access_token }}" | gcloud auth login --cred-file=- --allow-account-impersonation=true
+
+      - name: Set default service account
+        run: |
+          gcloud config set auth/impersonate_service_account cloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com
         
       # Build and push Docker image using Google Cloud Build
       - name: Build and Push Docker Image
