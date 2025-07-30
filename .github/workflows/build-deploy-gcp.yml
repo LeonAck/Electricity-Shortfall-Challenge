@@ -27,7 +27,7 @@ jobs:
 
       # Authenticate to Google Cloud using Workload Identity
       - id: auth
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v2.1.11
         with:
           workload_identity_provider: projects/791992711848/locations/global/workloadIdentityPools/github-pool/providers/github-provider
           service_account: cloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com
