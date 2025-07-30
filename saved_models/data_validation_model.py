@@ -46,7 +46,7 @@ class FeaturesInput(BaseModel):
     Barcelona_pressure: Optional[float]
     Bilbao_pressure: Optional[float]
     Madrid_pressure: Optional[float]
-    Valencia_pressure: Optional[float] = None
+    Valencia_pressure: Optional[float] 
 
     # Temperature
     Seville_temp: Optional[float]

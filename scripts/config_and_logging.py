@@ -96,3 +96,7 @@ def save_model_and_pipeline(pipeline, model, config):
     else: 
         joblib.dump(pipeline, f"{config['output']['saved_models_folder']}/{config['output']['saved_pipeline_filename']}")
         joblib.dump(model, f"{config['output']['saved_models_folder']}/{config['output']['saved_models_filename']}")
+
+def store_train_features(train_df, config):
+    os.makedirs(config['output']['saved_models_folder'], exist_ok=True)
+    train_df.to_csv(f"{config['output']['saved_models_folder']}/train_features.csv", index=False)

@@ -5,6 +5,7 @@ from scripts.models import get_model
 from scripts.preprocessing import get_pipeline_for_model
 from scripts.cross_validation_and_tuning import get_search_type, get_split_type, get_param_grid
 from sklearn.model_selection import TimeSeriesSplit
+from scripts.config_and_logging import store_train_features
 
 # goed kijken hoe dit zit
 def split_data(X_train: np.array, y_train: np.array, train_val_split=0.2):
@@ -78,8 +79,10 @@ def choose_best_model(output_dir, train_df, config):
     print(f"Best Model: {best_model_name}, Best RMSE: {best_rmse:.4f}")
 
     # Retrain on full training set
+    store_train_features(X_train, config)
     full_pipeline = get_pipeline_for_model(best_model_config, config)
     X_full_processed = full_pipeline.fit_transform(X_train, y_train)
+    print(X_full_processed.shape)
     trained_model_full = best_model.fit(X_full_processed, y_train)
 
     best_model_results = {

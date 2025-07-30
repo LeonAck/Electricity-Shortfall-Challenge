@@ -41,5 +41,5 @@ def main(config_path):
 
 
 if __name__ == "__main__":
-    config_path = 'configs/baseline.yaml'
+    config_path = 'configs/shallow4.yaml'
     main(config_path=config_path)
