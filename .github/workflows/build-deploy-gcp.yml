@@ -41,9 +41,9 @@ jobs:
         with:
           project_id: energy-forecast-467113
 
-      - name: Login with access token
+      - name: Authenticate with access token
         run: |
-          echo "${{ steps.auth.outputs.access_token }}" | gcloud auth login --cred-file=-
+            gcloud auth activate-access-token --token "${{ steps.auth.outputs.access_token }}"
 
       - name: Enable service account impersonation
         run: |
