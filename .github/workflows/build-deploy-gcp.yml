@@ -32,15 +32,14 @@ jobs:
           workload_identity_provider: projects/791992711848/locations/global/workloadIdentityPools/github-pool/providers/github-provider
           service_account: cloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com
           create_credentials_file: false  # Use Workload Identity Federation
-          access_token_scopes: https://www.googleapis.com/auth/cloud-platform
+          export_default_credentials: true  # ← THIS IS CRITICAL
 
       # Set up gcloud CLI
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: energy-forecast-467113
-          enable: true  # ← Critical: enables gcloud auth using WIF
-
+        
       # Build and push Docker image using Google Cloud Build
       - name: Build and Push Docker Image
         run: |-
