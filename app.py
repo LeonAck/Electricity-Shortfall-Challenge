@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 import joblib
 from google.cloud import storage
 import os
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -22,8 +23,12 @@ model = load_model()
 @app.route("/predict", methods=["POST"])
 def predict():
     data = request.json
-    # Add input validation here (MLOps best practice!)
-    prediction = model.predict([data["features"]])
+
+    df = pd.DataFrame([data["features"]])
+      
+    # Make prediction with the full pipeline (preprocessing + model)
+    prediction = model.predict(df)
+
     return jsonify({"prediction": prediction.tolist()})
 
 @app.route("/health", methods=["GET"])
