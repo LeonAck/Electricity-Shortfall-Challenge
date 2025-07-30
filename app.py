@@ -4,7 +4,7 @@ import joblib
 from google.cloud import storage
 import os
 import pandas as pd
-from saved_models.data_validation_model import PredictionRequest  # ← Import here
+from saved_models.data_valid import PredictionRequest  # ← Import here
 
 app = Flask(__name__)
 
@@ -28,7 +28,7 @@ def predict():
         request_data = PredictionRequest(**request.json)
 
         # Convert to DataFrame
-        features_dict = request_data.features.model_dump(by_alias=True, exclude_none=True)
+        features_dict = request_data.features.model_dump()
         df = pd.DataFrame([features_dict])
 
         # Make prediction
