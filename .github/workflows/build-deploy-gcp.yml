@@ -35,7 +35,8 @@ jobs:
         run: |-
           gcloud builds submit \
             --region=europe-west4 \
-            --tag=eu.gcr.io/energy-forecast-467113/energy-forecast-service:${{ github.sha }}
+            --tag=eu.gcr.io/energy-forecast-467113/energy-forecast-service:${{ github.sha }} \ 
+            --service-account=cloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com
 
       # Deploy to Cloud Run
       - name: Deploy to Cloud Run
@@ -45,7 +46,7 @@ jobs:
             --region=europe-west4 \
             --platform=managed \
             --allow-unauthenticated \
-            --service-account=ccloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com \
+            --service-account=cloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com \
             --set-env-vars=MODEL_VERSION=v1 \
             --project=energy-forecast-467113
 
