@@ -43,9 +43,9 @@ jobs:
 
       - name: Login with access token
         run: |
-          echo "${{ steps.auth.outputs.access_token }}" | gcloud auth login --cred-file=- --allow-account-impersonation=true
+          echo "${{ steps.auth.outputs.access_token }}" | gcloud auth login --cred-file=-
 
-      - name: Set default service account
+      - name: Enable service account impersonation
         run: |
           gcloud config set auth/impersonate_service_account cloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com
         
