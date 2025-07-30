@@ -4,6 +4,7 @@ from scripts.plots import plot_predictions
 from scripts.models import get_model
 from scripts.preprocessing import get_pipeline_for_model
 from scripts.cross_validation_and_tuning import get_search_type, get_split_type, get_param_grid
+from sklearn.model_selection import TimeSeriesSplit
 
 # goed kijken hoe dit zit
 def split_data(X_train: np.array, y_train: np.array, train_val_split=0.2):
@@ -44,7 +45,7 @@ def choose_best_model(output_dir, train_df, config):
     y_train = train_df[config['data']['target_column']]
     X_train = train_df.drop(columns=[config['data']['target_column']])
 
-    X_train_new, X_val, y_train_new, y_val = split_data(X_train, y_train, config['preprocessing']['train_val_split'])
+    X_train_new, X_val, y_train_new, y_val = split_data(X_train, y_train, config['model_selection']['train_val_split'])
     
     y_train_new = np.array(y_train_new)
     y_val = np.array(y_val)
@@ -101,48 +102,77 @@ def evaluate_model(y_true, y_pred):
     return np.sqrt(mean_squared_error(y_true, y_pred))
 
 
-def train_evaluate_no_cross_val(model, config, X_train_new, y_train_new, X_val, y_val, output_dir, dataset_name="validation"):
-    pipeline = get_pipeline_for_model(model, config)
-    X_train_processed = pipeline.fit_transform(X_train_new)
+def train_evaluate_no_cross_val(model, config, X_train, y_train, output_dir, dataset_name="validation"):
+    
+    X_train_new, X_val, y_train_new, y_val = split_data(X_train, y_train, config['model_selection']['train_val_split'])
+    
+    y_train_new = np.array(y_train_new)
+    y_val = np.array(y_val)
 
-    model_type = get_model(model['type'], model['params'])
-    trained_model = model_type.fit(X_train_processed, y_train_new)
+    for model in config['models']:
 
-    X_val_processed = pipeline.transform(X_val)
+        pipeline = get_pipeline_for_model(model, config)
+        X_train_processed = pipeline.fit_transform(X_train_new)
 
-    # Predict, evaluate and plot
-    predictions = trained_model.predict(X_val_processed)
-    rmse = evaluate_model(y_val, predictions)
+        model_type = get_model(model['type'], model['params'])
+        trained_model = model_type.fit(X_train_processed, y_train_new)
 
-    if config['output']['plots']:
-        plot_predictions(y_val, predictions, model['type'], output_dir, dataset_name="validation")
+        X_val_processed = pipeline.transform(X_val)
 
+        # Predict, evaluate and plot
+        predictions = trained_model.predict(X_val_processed)
+        rmse = evaluate_model(y_val, predictions)
+
+        if config['output']['plots']:
+            plot_predictions(y_val, predictions, model['type'], output_dir, dataset_name="validation")
+        
+        print(f"Model: {model['type']}, RMSE: {rmse:.4f}")
+
+    if rmse < best_rmse:
+        best_rmse = rmse
+        best_model = trained_model
+        best_model_name = model['type']
+        best_model_config = model
+
+    print(f"Best Model: {best_model_name}, Best RMSE: {best_rmse:.4f}")
+    
     return rmse, trained_model
 
 
-def train_evaluate_with_cross_val(model, config, X_train_new, y_train_new, X_val, y_val, output_dir):
+def train_evaluate_with_cross_val(model, config, X_train, y_train, X_val, y_val):
+
     pipeline = get_pipeline_for_model(model, config)
-    X_train_processed = pipeline.fit_transform(X_train_new)
-
     model_type = get_model(model['type'], model['params'])
-    trained_model = model_type.fit(X_train_processed, y_train_new)
 
-    X_val_processed = pipeline.transform(X_val)
+    tscv = TimeSeriesSplit(n_splits=config['model_selection']['n_splits'])
+    rmse_scores = []
 
-    # Predict, evaluate and plot
-    predictions = trained_model.predict(X_val_processed)
-    rmse = evaluate_model(y_val, predictions)
+    for train_idx, val_idx in tscv.split(X_train):
+        X_train_cv, X_val_cv = X_train[train_idx], X_train[val_idx]
+        y_train_cv, y_val_cv = y_train[train_idx], y_train[val_idx]
 
+        # Fit and transform the training data
+        X_train_processed = pipeline.fit_transform(X_train_cv)
+        model_instance = get_model(model['type'], model['params'])  # fresh instance
+        trained_model = model_instance.fit(X_train_processed, y_train_cv)
 
-    return rmse, trained_model
+        # Transform the validation data
+        X_val_processed = pipeline.transform(X_val_cv)
+
+        # Predict and evaluate
+        predictions = trained_model.predict(X_val_processed)
+        rmse = evaluate_model(y_val_cv, predictions)
+        rmse_scores.append(rmse)
+
+    return np.mean(rmse_scores), trained_model
 
 
 def tune_model_via_cv(model, config, X_train, y_train):
     
-    tscv = get_split_type(config)(config['cv_settings']['n_splits'])
+    tscv = get_split_type(config)(config['model_selection']['n_splits'])
 
     search_type = get_search_type(config)
     param_grid = get_param_grid(model, config)
-    cv_search = search_type(model, param_grid, cv=tscv, scoring=config['cv_settings']['scoring_metric'])
+    cv_search = search_type(model, param_grid, cv=tscv, scoring=config['model_selection']['scoring_metric'])
     cv_search.fit(X_train, y_train)
     return cv_search.best_estimator_, cv_search.best_params_, cv_search.best_score_

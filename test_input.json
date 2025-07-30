@@ -29,7 +29,7 @@
         "Barcelona_weather_id": 800.0,
         "Bilbao_pressure": 1025.6666666667,
         "Seville_weather_id": 800.0,
-        "Valencia_pressure": NaN,
+        "Valencia_pressure": null,
         "Seville_temp_max": 284.4833333333,
         "Madrid_pressure": 1030.0,
         "Valencia_temp_max": 287.4833333333,

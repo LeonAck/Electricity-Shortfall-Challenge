@@ -4,6 +4,7 @@ import joblib
 from google.cloud import storage
 import os
 import pandas as pd
+from saved_models.data_validation_model import PredictionRequest  # ← Import here
 
 app = Flask(__name__)
 
@@ -22,14 +23,26 @@ model = load_model()
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    data = request.json
+    try:
+        # Parse and validate input using Pydantic
+        request_data = PredictionRequest(**request.json)
 
-    df = pd.DataFrame([data["features"]])
-      
-    # Make prediction with the full pipeline (preprocessing + model)
-    prediction = model.predict(df)
+        # Convert to DataFrame
+        features_dict = request_data.features.model_dump(by_alias=True, exclude_none=True)
+        df = pd.DataFrame([features_dict])
 
-    return jsonify({"prediction": prediction.tolist()})
+        # Make prediction
+        prediction = model.predict(df)
+
+        return jsonify({"prediction": prediction.tolist()})
+
+    except Exception as e:
+        # Handle both Pydantic validation errors and others
+        if isinstance(e, ValueError) or "ValidationError" in str(type(e)):
+            return jsonify({"error": "Invalid input", "details": str(e)}), 400
+        else:
+            app.logger.error(f"Prediction error: {e}")
+            return jsonify({"error": "Internal server error"}), 500
 
 @app.route("/health", methods=["GET"])
 def health():

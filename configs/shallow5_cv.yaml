@@ -41,10 +41,11 @@ preprocessing:
       n_neighbors: 5
   freq: '3h'
   add_time_dummies: 'cyclical'
-  train_val_split: 0.2
+  
 
-cv_settings:
-  use_cross_validation: true'
+model_selection:
+  train_val_split: 0.2
+  use_cross_validation: true
   split_type: TimeSeriesSplit   # TimeSeriesSplit only
   n_splits: 5
   scoring: root_mean_squared_error
