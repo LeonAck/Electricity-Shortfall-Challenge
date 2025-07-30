@@ -44,26 +44,24 @@ jobs:
 
       - name: Create external account credentials file
         run: |
-          # Create token file
           echo "${{ steps.auth.outputs.access_token }}" > /tmp/token.txt
-
-          # Create credentials configuration
-          cat > /tmp/wif-creds.json << EOF
-            {
-              "type": "external_account",
-              "audience": "identitynamespace:791992711848:github-pool",
-              "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
-              "token_url": "https://sts.googleapis.com/v1/token",
-              "service_account_impersonation_url": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/cloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com:generateAccessToken",
-              "credential_source": {
-                "file": "/tmp/token.txt"
-              }
+      
+          cat > /tmp/wif-creds.json << 'EOF'
+          {
+            "type": "external_account",
+            "audience": "identitynamespace:791992711848:github-pool",
+            "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+            "token_url": "https://sts.googleapis.com/v1/token",
+            "service_account_impersonation_url": "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/cloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com:generateAccessToken",
+            "credential_source": {
+              "file": "/tmp/token.txt"
             }
-            EOF
-
+          }
+          EOF
+    
       - name: Authenticate with gcloud
         run: |
-          gcloud auth login --cred-file=/tmp/wif-creds.json
+          gcloud auth login --cred-file=/tmp/wif-creds.json --quiet
         
       # Build and push Docker image using Google Cloud Build
       - name: Build and Push Docker Image
