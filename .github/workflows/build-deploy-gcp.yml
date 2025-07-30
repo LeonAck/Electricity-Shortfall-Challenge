@@ -31,6 +31,7 @@ jobs:
         with:
           workload_identity_provider: projects/791992711848/locations/global/workloadIdentityPools/github-pool/providers/github-provider
           service_account: cloud-run-sa-energy-forecast-i@energy-forecast-467113.iam.gserviceaccount.com
+          create_credentials_file: false  # Use Workload Identity Federation
 
       # Set up gcloud CLI
       - uses: google-github-actions/setup-gcloud@v2
