@@ -1,12 +1,13 @@
 name: Build and Deploy Model
 
 on:
-  push:
-    branches: 
-        - main
-        - clean_code
-
-  pull_request:
+  workflow_dispatch:  # Only runs manually
+#on:
+ # push:
+  #  branches:
+   ##   - main
+     # - clean_code
+  #pull_request:
     
 
 jobs:
