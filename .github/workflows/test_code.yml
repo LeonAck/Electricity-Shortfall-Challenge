@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - clean_code
+  pull_request:
+    branches:
+      - main
  
 
 jobs:
