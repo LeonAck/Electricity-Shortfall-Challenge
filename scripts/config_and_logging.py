@@ -18,12 +18,12 @@ def run_with_config(cfg: DictConfig) -> dict:
     """The actual logic without Hydra decoration"""
     return dict(cfg)
 
-def load_config_hydra(config_path):
+def load_config_hydra(config_name="config", config_path="C:/Users/lackerman008/OneDrive - pwc/Outside/Code/Machine learning/Electricity Shortfall Challenge/configs"):
     config_dir = Path(config_path).absolute()
     
     with hydra.initialize_config_dir(config_dir=str(config_dir), version_base=None):
         # This gives you the FULL Hydra config, same as in hydra_main
-        cfg = hydra.compose(config_name="config")
+        cfg = hydra.compose(config_name)
         result = run_with_config(cfg)
         return result
 

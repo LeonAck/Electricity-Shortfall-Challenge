@@ -2,7 +2,6 @@ import pytest
 import pandas as pd
 import numpy as np
 import os
-import sys
 
 from scripts.preprocessing import WeatherDataPreprocessor, create_preprocessing_pipeline, StandardTransformerWrapper, SimplifiedPatternImputer, TimeAwareKNNImputer
 from scripts.data_loading import load_data
