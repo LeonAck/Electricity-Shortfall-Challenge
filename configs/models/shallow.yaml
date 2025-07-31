@@ -3,12 +3,6 @@
   params: {}
   scaling: true
 
-- type: RandomForest
-  params:
-    n_estimators: 10
-    random_state: *seed
-  scaling: false
-
 # Linear models with regularization
 - type: Ridge
   params:

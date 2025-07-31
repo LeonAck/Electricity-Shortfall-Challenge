@@ -3,12 +3,6 @@
   params: {}
   scaling: true
 
-- type: RandomForest
-  params:
-    n_estimators: 10
-    random_state: ${seed} 
-  scaling: false
-
 # Linear models with regularization
 - type: Ridge
   params:
@@ -20,13 +14,6 @@
   params:
     alpha: 1.0
     random_state: ${seed} 
-  scaling: true
-
-- type: ElasticNet
-  params:
-    alpha: 1.0
-    l1_ratio: 0.5
-    random_state: ${seed}
   scaling: true
 
 # Tree models
