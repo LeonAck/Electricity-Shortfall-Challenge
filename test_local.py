@@ -5,6 +5,8 @@ from saved_models.data_validation_model import PredictionRequest  # Import your 
 
 # Load model
 model = joblib.load("saved_models/combined_model.joblib")  # or from GCS
+
+print(model)
 check_data = True # Set to False if you want to skip validation
 # Load test input
 with open("test_input.json") as f:
@@ -15,6 +17,7 @@ if check_data:
     # Convert to DataFrame
     features_dict = request_data.features.model_dump(by_alias=True)
     df = pd.DataFrame([features_dict])
+    print("Incoming data columns:", df.columns.tolist())
 else:
     df = pd.DataFrame([data["features"]])
 
