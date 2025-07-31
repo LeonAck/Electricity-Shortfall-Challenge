@@ -44,12 +44,10 @@ def get_pipeline_for_model(model, config):
         'KNeighborsRegressor',
         'SVR'
         ]:
-        sklearn_pipeline = create_preprocessing_pipeline(imputer=get_imputer(config), 
+        return create_preprocessing_pipeline(imputer=get_imputer(config), 
                                              freq=config['preprocessing']['freq'],
                                              add_time_dummies=config['preprocessing']['add_time_dummies'], 
                                              scaling=model['scaling'])
-        
-        return StandardTransformerWrapper(sklearn_pipeline)
 
     else:
         raise ValueError(f"No preprocessing pipeline defined for model_type: {model['type']}")
@@ -97,25 +95,7 @@ def create_preprocessing_pipeline(imputer, freq='3h',
     # Always convert to numpy
     steps.append(('to_numpy', ToNumpyArray()))  
 
-    return Pipeline(steps)
-
-# Modify your existing scikit-learn pipeline creation
-class StandardTransformerWrapper(BaseEstimator, TransformerMixin):
-    def __init__(self, sklearn_pipeline):
-        self.sklearn_pipeline = sklearn_pipeline
-    
-    def fit(self, X, y=None):
-        self.sklearn_pipeline.fit(X, y)
-        return self
-    
-    def transform(self, X, y=None):
-        X_transformed = self.sklearn_pipeline.transform(X)
-        return X_transformed
-
-    def fit_transform(self, X, y=None):
-        X_transformed = self.sklearn_pipeline.fit_transform(X)
-        return X_transformed
-    
+    return Pipeline(steps)    
 
 class ARIMATransformer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
@@ -166,6 +146,10 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
         # Remove any unwanted columns
         if 'Unnamed: 0' in df.columns:
             df = df.drop(columns=['Unnamed: 0'])
+
+        # If target column is still present
+        if "load_shortfall_3h" in df.columns:
+            df = df.drop(coumns=["load_shortfall_3h"])
 
         # Add cyclical time features
         if self.add_time_dummies == "cyclical":

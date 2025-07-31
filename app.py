@@ -31,6 +31,8 @@ def predict():
         features_dict = request_data.features.model_dump()
         df = pd.DataFrame([features_dict])
 
+        
+
         # Make prediction
         prediction = model.predict(df)
 
