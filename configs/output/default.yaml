@@ -1,0 +1,7 @@
+save_model: true
+output_folder: 'output'
+saved_models_folder: 'saved_models'
+saved_models_filename: 'best_model.joblib'
+saved_pipeline_filename: 'preprocessing_pipeline.joblib'
+combined_model_filename: 'combined_model.joblib'
+sample_submission_filename: 'sample_submission.csv'

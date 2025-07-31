@@ -1,0 +1,110 @@
+data:
+  data_path: data/data_raw/
+  submission_path: sample_submission_load_shortfall.csv
+  target_column: load_shortfall_3h
+  test_path: df_test.csv
+  train_path: df_train.csv
+logging:
+  artifact_dir: artifacts/${run.run_id}
+  mlflow_log: false
+  tracking_tool: mlflow
+mlflow:
+  enabled: true
+  experiment_name: energy_forecasting
+  tracking_uri: file:./mlruns
+models:
+- params: {}
+  scaling: true
+  type: LinearRegression
+- params:
+    n_estimators: 10
+    random_state: 42
+  scaling: false
+  type: RandomForest
+- params:
+    alpha: 10.0
+    random_state: 42
+  scaling: true
+  type: Ridge
+- params:
+    alpha: 1.0
+    random_state: 42
+  scaling: true
+  type: Lasso
+- params:
+    alpha: 1.0
+    l1_ratio: 0.5
+    random_state: 42
+  scaling: true
+  type: ElasticNet
+- params:
+    max_depth: 10
+    n_estimators: 100
+    random_state: 42
+  scaling: false
+  type: RandomForest
+- params:
+    max_depth: 10
+    n_estimators: 100
+    random_state: 42
+  scaling: false
+  type: ExtraTreesRegressor
+- params:
+    learning_rate: 0.1
+    max_depth: 4
+    n_estimators: 100
+    random_state: 42
+  scaling: false
+  type: GradientBoostingRegressor
+- params:
+    learning_rate: 0.1
+    max_depth: 4
+    n_estimators: 100
+    random_state: 42
+  scaling: false
+  type: XGBRegressor
+- params:
+    n_neighbors: 8
+  scaling: true
+  type: KNeighborsRegressor
+- params:
+    C: 10.0
+    gamma: scale
+    kernel: rbf
+  scaling: true
+  type: SVR
+- params:
+    AR_order: 0
+    MA_order: 1
+    difference_order: 1
+  scaling: false
+  type: MA1
+- params:
+    AR_order: 1
+    MA_order: 0
+    difference_order: 1
+  scaling: false
+  type: AR
+output:
+  output_folder: output
+  plots: false
+  sample_submission_filename: sample_submission.csv
+  save_model: true
+  saved_models_filename: best_model.pkl
+  saved_models_folder: saved_models
+  saved_pipeline_filename: preprocessing_pipeline.pkl
+preprocessing:
+  add_time_dummies: cyclical
+  column_to_impute: Valencia_pressure
+  freq: 3h
+  imputer:
+    params:
+      n_neighbors: 5
+    type: TimeAwareKNNImputer
+  train_val_split: 0.2
+run:
+  g_cloud: true
+  run_name: shallow4
+  save_model: false
+  seed: 42
+  submit: false

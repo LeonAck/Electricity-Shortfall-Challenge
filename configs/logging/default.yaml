@@ -1,0 +1,6 @@
+tracking_tool: mlflow
+mlflow_enabled: true
+artifact_dir: artifacts/${run.run_id}
+experiment_name: "energy_forecasting"
+tracking_uri: "file:./mlruns" 
+plots: false

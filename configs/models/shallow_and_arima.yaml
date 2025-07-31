@@ -1,0 +1,89 @@
+
+- type: LinearRegression
+  params: {}
+  scaling: true
+
+- type: RandomForest
+  params:
+    n_estimators: 10
+    random_state: ${seed} 
+  scaling: false
+
+# Linear models with regularization
+- type: Ridge
+  params:
+    alpha: 10.0
+    random_state: ${seed} 
+  scaling: true
+
+- type: Lasso
+  params:
+    alpha: 1.0
+    random_state: ${seed} 
+  scaling: true
+
+- type: ElasticNet
+  params:
+    alpha: 1.0
+    l1_ratio: 0.5
+    random_state: ${seed}
+  scaling: true
+
+# Tree models
+- type: RandomForest
+  params:
+    n_estimators: 100
+    max_depth: 10
+    random_state: ${seed}
+  scaling: false
+
+- type: ExtraTreesRegressor
+  params:
+    n_estimators: 100
+    max_depth: 10
+    random_state: ${seed} 
+  scaling: false
+
+- type: GradientBoostingRegressor
+  params:
+    n_estimators: 100
+    max_depth: 4
+    learning_rate: 0.1
+    random_state: ${seed}
+  scaling: false
+
+- type: XGBRegressor
+  params:
+    n_estimators: 100
+    max_depth: 4
+    learning_rate: 0.1
+    random_state: ${seed}
+  scaling: false
+
+# Other models
+- type: KNeighborsRegressor
+  params:
+    n_neighbors: 8
+  scaling: true
+
+- type: SVR
+  params:
+    kernel: 'rbf'
+    C: 10.0
+    gamma: 'scale'
+  scaling: true
+
+# Time Series Models
+- type: MA1
+  params: 
+    AR_order: 0
+    difference_order: 1
+    MA_order: 1
+  scaling: false
+
+- type: AR
+  params:
+    AR_order: 1
+    difference_order: 1
+    MA_order: 0
+  scaling: false

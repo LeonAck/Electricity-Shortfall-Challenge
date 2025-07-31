@@ -1,10 +1,11 @@
-# configs/shallow4.yaml
+# configs/baseline.yaml
 
 run:
-  run_name: shallow4
+  run_name: baseline
   seed: &seed 42
   submit: false
   save_model: false
+  gcloud: true
 
 logging:
   mlflow_log: false
@@ -17,6 +18,7 @@ output:
   saved_models_folder: 'saved_models'
   saved_models_filename: 'best_model.pkl'
   saved_pipeline_filename: 'preprocessing_pipeline.pkl'
+  combined_model_filename: 'combined_model.joblib'
   plots: false
   sample_submission_filename: 'sample_submission.csv'
 
@@ -40,7 +42,10 @@ preprocessing:
       n_neighbors: 5
   freq: '3h'
   add_time_dummies: 'cyclical'
+
+model_selection:
   train_val_split: 0.2
+  use_cross_validation: false
 
 models:
   - type: LinearRegression
