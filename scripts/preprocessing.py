@@ -149,7 +149,7 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
 
         # If target column is still present
         if "load_shortfall_3h" in df.columns:
-            df = df.drop(coumns=["load_shortfall_3h"])
+            df = df.drop(columns=["load_shortfall_3h"])
 
         # Add cyclical time features
         if self.add_time_dummies == "cyclical":
