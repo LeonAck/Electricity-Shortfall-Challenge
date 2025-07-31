@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 
-from scripts.preprocessing import WeatherDataPreprocessor, create_preprocessing_pipeline, StandardTransformerWrapper, SimplifiedPatternImputer, TimeAwareKNNImputer
+from scripts.preprocessing import WeatherDataPreprocessor, create_preprocessing_pipeline, SimplifiedPatternImputer, TimeAwareKNNImputer
 from scripts.data_loading import load_data
 from scripts.config_and_logging import load_config
 from sklearn.impute import SimpleImputer
@@ -59,7 +59,7 @@ def test_pipeline_runs_on_dummy_data():
     })
 
     imputer = TimeAwareKNNImputer()
-    pipeline = StandardTransformerWrapper(create_preprocessing_pipeline(imputer=imputer))
+    pipeline = create_preprocessing_pipeline(imputer=imputer)
     output = pipeline.fit_transform(df)
     assert isinstance(output, np.ndarray)
     assert output.shape[0] == df.shape[0]  # Check row count preserved
@@ -98,7 +98,7 @@ def test_pipeline_other_imputer():
     })
 
     imputer = SimplifiedPatternImputer(column='temperature')
-    pipeline = StandardTransformerWrapper(create_preprocessing_pipeline(imputer=imputer))
+    pipeline = create_preprocessing_pipeline(imputer=imputer)
     result = pipeline.fit_transform(df)
     assert isinstance(result, np.ndarray)
     assert np.isnan(np.sum(result[:,0])) == 0 # Check no NaNs remain
@@ -116,10 +116,10 @@ def test_time_dummies_affect_output_shape():
         'time': pd.date_range("2023-01-01", periods=4, freq="h")
     })
 
-    pipeline_no_dummies = StandardTransformerWrapper(create_preprocessing_pipeline(imputer=imputer, add_time_dummies=None))
+    pipeline_no_dummies = create_preprocessing_pipeline(imputer=imputer, add_time_dummies=None)
     output1 = pipeline_no_dummies.fit_transform(df)
     
-    pipeline_with_dummies = StandardTransformerWrapper(create_preprocessing_pipeline(imputer=imputer, add_time_dummies='cyclical'))
+    pipeline_with_dummies = create_preprocessing_pipeline(imputer=imputer, add_time_dummies='cyclical')
     output2 = pipeline_with_dummies.fit_transform(df)
 
     assert output2.shape[1] == output1.shape[1] + 6  # 6 cyclical features added
@@ -185,7 +185,7 @@ def test_no_nans(train_and_test_df):
     df, _ = train_and_test_df
 
     imputer = SimplifiedPatternImputer(column='Valencia_pressure')
-    pipeline = StandardTransformerWrapper(create_preprocessing_pipeline(imputer=imputer))
+    pipeline = create_preprocessing_pipeline(imputer=imputer)
     result = pipeline.fit_transform(df)
 
     assert isinstance(result, np.ndarray)

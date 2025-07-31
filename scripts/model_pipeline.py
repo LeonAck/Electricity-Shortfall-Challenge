@@ -82,7 +82,6 @@ def choose_best_model(output_dir, train_df, config):
     store_train_features(X_train, config)
     full_pipeline = get_pipeline_for_model(best_model_config, config)
     X_full_processed = full_pipeline.fit_transform(X_train, y_train)
-    full_pipeline.feature_names = X_full_processed.columns.tolist() 
     print(X_full_processed.shape)
     trained_model_full = best_model.fit(X_full_processed, y_train)
 
