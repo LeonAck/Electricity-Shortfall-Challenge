@@ -7,7 +7,7 @@ from omegaconf import DictConfig
 from pathlib import Path
 
 from scripts.data_loading import load_data
-from scripts.config_and_logging import load_config
+from scripts.config_and_logging import load_config, load_config_hydra
 from scripts.model_pipeline import choose_best_model
 from scripts.inference import load_models, predict_batch
 
@@ -19,16 +19,29 @@ config_path = project_root / "configs"
 
 
 @pytest.fixture
-
-def config():
-    # Get the project root directory (where the tests are running from)
-    config_path = 'configs/shallow4.yaml'
+def config(config_name="config.yaml"):
+    # Get the project root directory
+    project_root = Path(__file__).parent.parent
+    config_path = project_root / "configs"
 
     if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Config file not found at {config_path}")
+        raise FileNotFoundError(f"Config directory not found at {config_path}")
 
     # Adjust path if needed
-    return load_config(config_path)
+    return load_config_hydra(config_name=config_name, config_path=str(config_path))
+
+@pytest.fixture
+def test_config(config_name="config_test.yaml"):
+    # Get the project root directory
+    project_root = Path(__file__).parent.parent
+    config_path = project_root / "configs"
+
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Config directory not found at {config_path}")
+
+    # Adjust path if needed
+    return load_config_hydra(config_name=config_name, config_path=str(config_path))
+
 
 @pytest.fixture
 def train_and_test_df(config):
@@ -60,17 +73,17 @@ def test_choose_best_model_logic(config, train_and_test_df):
     assert best_model_results['rmse'] > 0
 
 
-def test_ARIMA_predict(train_and_test_df, config_path= "configs/test_config.yaml"):
+def test_ARIMA_predict(train_and_test_df, test_config):
     """
     Test the ARIMA model prediction functionality.
     """
-    config = load_config(config_path)
+
     train_df, test_df = train_and_test_df
 
     best_model_results = choose_best_model(
         output_dir='.', 
         train_df=train_df,
-        config=config
+        config=test_config
     )
 
     # Create a folder for saved models

@@ -13,9 +13,8 @@ project_root = Path(__file__).parent.parent
 config_path = project_root / "configs"
 
 
-
-def main():
-    config = load_config_hydra(str(config_path))
+def main(config_name="config.yaml"):
+    config = load_config_hydra(config_name=config_name, config_path=str(config_path))
     
     run_name = config['run']['run_name']
 
