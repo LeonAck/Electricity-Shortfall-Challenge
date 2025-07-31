@@ -2,6 +2,9 @@ import os
 import sys
 import pytest
 import joblib
+import hydra
+from omegaconf import DictConfig
+from pathlib import Path
 
 from scripts.data_loading import load_data
 from scripts.config_and_logging import load_config
@@ -9,7 +12,14 @@ from scripts.model_pipeline import choose_best_model
 from scripts.inference import load_models, predict_batch
 
 
+
+# Get the project root directory
+project_root = Path(__file__).parent.parent
+config_path = project_root / "configs"
+
+
 @pytest.fixture
+
 def config():
     # Get the project root directory (where the tests are running from)
     config_path = 'configs/shallow4.yaml'
@@ -48,6 +58,7 @@ def test_choose_best_model_logic(config, train_and_test_df):
     assert best_model_results["pipeline"] is not None
     assert isinstance(best_model_results['rmse'], float)
     assert best_model_results['rmse'] > 0
+
 
 def test_ARIMA_predict(train_and_test_df, config_path= "configs/test_config.yaml"):
     """

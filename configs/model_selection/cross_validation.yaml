@@ -1,0 +1,8 @@
+
+train_val_split: null
+use_cross_validation: true
+split_type: TimeSeriesSplit
+n_splits: 5
+scoring: root_mean_squared_error
+search_type: grid
+random_search_n_iter: 20

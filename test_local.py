@@ -13,7 +13,7 @@ with open("test_input.json") as f:
 if check_data:
     request_data = PredictionRequest(**data)
     # Convert to DataFrame
-    features_dict = request_data.features.model_dump(by_alias=True, exclude_none=True)
+    features_dict = request_data.features.model_dump(by_alias=True)
     df = pd.DataFrame([features_dict])
 else:
     df = pd.DataFrame([data["features"]])

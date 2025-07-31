@@ -3,6 +3,7 @@ from typing import Dict, Any, Optional
 
 
 class FeaturesInput(BaseModel):
+
     # Allow population by field name (replaces old allow_population_by_field_name)
     model_config = {"validate_by_name": True}  # or "populate_by_name" depending on your Pydantic version
 
@@ -29,8 +30,8 @@ class FeaturesInput(BaseModel):
     Madrid_rain_1h: Optional[float]
 
     # Snow
-    Bilbao_snow_3h: Optional[int]
-    Valencia_snow_3h: Optional[int]
+    Bilbao_snow_3h: Optional[float]
+    Valencia_snow_3h: Optional[float]
 
     # Humidity
     Seville_humidity: Optional[float]
@@ -77,6 +78,8 @@ class FeaturesInput(BaseModel):
 
     # Categorical pressure
     Seville_pressure: Optional[str]
+
+    load_shortfall_3h: Optional[float] = None
 
     # Validator: Non-negative wind speed
     @field_validator('Madrid_wind_speed', 'Bilbao_wind_speed', 'Barcelona_wind_speed', 'Seville_wind_speed')
@@ -168,17 +171,3 @@ test_json = {
         "Madrid_temp_min": 279.15
     }
 }
-
-import pandas as pd
-# Load CSV
-df = pd.read_csv("data/data_raw/df_test.csv")
-
-row = df.iloc[600].to_dict()
-
-# Create the dictionary in the required format
-payload = {"features": row}
-
-# Validate
-req = PredictionRequest(**payload)
-print("✅ Validated successfully!")
-print(payload)

@@ -1,19 +1,33 @@
-from scripts.data_loading import load_data
-from scripts.config_and_logging import load_config, generate_run_id, save_run_metadata, create_output_dir, log_to_mlflow, save_model_and_pipeline
+from scripts.data_loading import load_data, test_training_data
+from scripts.config_and_logging import generate_run_id, save_run_metadata, create_output_dir, log_to_mlflow, save_model_and_pipeline, run_with_config, load_config_hydra
 from scripts.model_pipeline import choose_best_model
 
-import os
+import hydra
+from omegaconf import DictConfig, OmegaConf
+from pathlib import Path
 
-def main(config_path):
-    config = load_config(config_path=os.path.join(os.getcwd(), config_path))
+
+
+# Get the project root directory
+project_root = Path(__file__).parent.parent
+config_path = project_root / "configs"
+
+
+
+def main():
+    config = load_config_hydra(str(config_path))
+    
     run_name = config['run']['run_name']
+
     run_id = generate_run_id(config)
     output_dir = create_output_dir(run_name, run_id, config)
 
     print("Run name:", run_name)
     print("Run ID:", run_id)
     print("Load data...")
-    train_df, test_df, _ = load_data(config)
+    train_df, _, _ = load_data(config)
+
+    test_training_data(train_df)
 
     print("Choose best models on training and validation set. Retrain on on full training set...")
 
@@ -31,7 +45,7 @@ def main(config_path):
     # Save config, metrics and model type
     save_run_metadata(output_dir, config, metrics)
 
-    if config['logging']['mlflow_log']:
+    if config['logging']['mlflow_enabled']:
         # Log to MLflow
         log_to_mlflow(config, output_dir, run_id, best_model_results['model_name'], best_model_results["model_object"], metrics, parameters=config.get("models", {}))
 
@@ -41,5 +55,4 @@ def main(config_path):
 
 
 if __name__ == "__main__":
-    config_path = 'configs/shallow4.yaml'
-    main(config_path=config_path)
+    main()
