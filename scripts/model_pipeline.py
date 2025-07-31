@@ -65,7 +65,7 @@ def choose_best_model(output_dir, train_df, config):
         predictions = trained_model.predict(X_val_processed)
         rmse = evaluate_model(y_val, predictions)
 
-        if config['output']['plots']:
+        if config['logging']['plots']:
             plot_predictions(y_val, predictions, model['type'], output_dir, dataset_name="validation")
         
         print(f"Model: {model['type']}, RMSE: {rmse:.4f}")
@@ -126,7 +126,7 @@ def train_evaluate_no_cross_val(model, config, X_train, y_train, output_dir, dat
         predictions = trained_model.predict(X_val_processed)
         rmse = evaluate_model(y_val, predictions)
 
-        if config['output']['plots']:
+        if config['logging']['plots']:
             plot_predictions(y_val, predictions, model['type'], output_dir, dataset_name="validation")
         
         print(f"Model: {model['type']}, RMSE: {rmse:.4f}")

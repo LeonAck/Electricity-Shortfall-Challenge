@@ -1,0 +1,15 @@
+models: 
+ # Time Series Models
+  - type: MA1
+    params: 
+      AR_order: 0
+      difference_order: 1
+      MA_order: 1
+    scaling: false
+
+  - type: AR
+    params:
+      AR_order: 1
+      difference_order: 1
+      MA_order: 0
+    scaling: false

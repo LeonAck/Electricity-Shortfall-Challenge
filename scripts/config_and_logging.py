@@ -6,10 +6,35 @@ import joblib
 import mlflow
 import mlflow.sklearn  # For sklearn models
 from sklearn.pipeline import Pipeline
+import hydra
+from omegaconf import DictConfig
+from pathlib import Path
 
 def load_config(config_path="configs/baseline.yaml"):
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
+    
+def run_with_config(cfg: DictConfig) -> dict:
+    """The actual logic without Hydra decoration"""
+    return dict(cfg)
+
+def load_config_hydra(config_path):
+    config_dir = Path(config_path).absolute()
+    
+    with hydra.initialize_config_dir(config_dir=str(config_dir), version_base=None):
+        # This gives you the FULL Hydra config, same as in hydra_main
+        cfg = hydra.compose(config_name="config")
+        result = run_with_config(cfg)
+        return result
+
+# Get the project root directory
+project_root = Path(__file__).parent.parent
+config_path = project_root / "configs"
+
+@hydra.main(version_base=None, config_path=str(config_path), config_name="config")
+def hydra_main(cfg: DictConfig) -> DictConfig:
+    print(cfg)
+    return run_with_config(cfg)
 
 def generate_run_id(config):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
