@@ -5,10 +5,36 @@ import json
 import joblib
 import mlflow
 import mlflow.sklearn  # For sklearn models
+from sklearn.pipeline import Pipeline
+import hydra
+from omegaconf import DictConfig
+from pathlib import Path
 
 def load_config(config_path="configs/baseline.yaml"):
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
+    
+def run_with_config(cfg: DictConfig) -> dict:
+    """The actual logic without Hydra decoration"""
+    return dict(cfg)
+
+def load_config_hydra(config_name="config", config_path="C:/Users/lackerman008/OneDrive - pwc/Outside/Code/Machine learning/Electricity Shortfall Challenge/configs"):
+    config_dir = Path(config_path).absolute()
+    
+    with hydra.initialize_config_dir(config_dir=str(config_dir), version_base=None):
+        # This gives you the FULL Hydra config, same as in hydra_main
+        cfg = hydra.compose(config_name)
+        result = run_with_config(cfg)
+        return result
+
+# Get the project root directory
+project_root = Path(__file__).parent.parent
+config_path = project_root / "configs"
+
+@hydra.main(version_base=None, config_path=str(config_path), config_name="config")
+def hydra_main(cfg: DictConfig) -> DictConfig:
+    print(cfg)
+    return run_with_config(cfg)
 
 def generate_run_id(config):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -82,5 +108,20 @@ def log_to_mlflow(config, output_dir, run_id, model_name, model_object, metrics,
 
 def save_model_and_pipeline(pipeline, model, config):
     os.makedirs(config['output']['saved_models_folder'], exist_ok=True)
-    joblib.dump(pipeline, f"{config['output']['saved_models_folder']}/{config['output']['saved_pipeline_filename']}")
-    joblib.dump(model, f"{config['output']['saved_models_folder']}/{config['output']['saved_models_filename']}")
+    if config["run"]["gcloud"]:
+
+        full_pipeline = Pipeline([
+            ("preprocessing", pipeline),  
+            ("model", model)              
+        ])
+
+        # Save combined artifact
+        joblib.dump(full_pipeline, f"{config['output']['saved_models_folder']}/{config['output']['combined_model_filename']}")
+        
+    else: 
+        joblib.dump(pipeline, f"{config['output']['saved_models_folder']}/{config['output']['saved_pipeline_filename']}")
+        joblib.dump(model, f"{config['output']['saved_models_folder']}/{config['output']['saved_models_filename']}")
+
+def store_train_features(train_df, config):
+    os.makedirs(config['output']['saved_models_folder'], exist_ok=True)
+    train_df.to_csv(f"{config['output']['saved_models_folder']}/train_features.csv", index=False)
