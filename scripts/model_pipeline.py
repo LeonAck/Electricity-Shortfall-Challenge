@@ -82,6 +82,86 @@ def choose_best_model(output_dir, train_df, config):
     store_train_features(X_train, config)
     full_pipeline = get_pipeline_for_model(best_model_config, config)
     X_full_processed = full_pipeline.fit_transform(X_train, y_train)
+    full_pipeline.feature_names = X_full_processed.columns.tolist() 
+    print(X_full_processed.shape)
+    trained_model_full = best_model.fit(X_full_processed, y_train)
+
+    best_model_results = {
+        "model_object": trained_model_full,
+        "pipeline": full_pipeline,
+        "model_name": best_model_name,
+        "rmse": best_rmse
+    }
+    
+    return best_model_results
+
+
+def choose_best_model_cv(output_dir, train_df, config):
+    """
+    Choose the best model based on RMSE from the training and validation set.
+    Args:
+        output_dir: Directory to save results and plots
+        train_df: DataFrame containing training data
+        config: Configuration dictionary containing model parameters and settings
+        train_val_split: Proportion of data to use for validation
+    """
+    best_rmse = float("inf")
+    best_model = None
+    best_model_name = ""
+    best_model_config = None
+
+    y_train = train_df[config['data']['target_column']]
+    X_train = train_df.drop(columns=[config['data']['target_column']])
+
+    if config["model_selection"]["use_cross_validation"]:
+        for model in config['models']:
+
+            mean_rsme, model = train_evaluate_with_cross_val(model, config, X_train, y_train)
+
+            if mean_rsme < best_rmse:
+                best_rmse = mean_rsme
+                best_model = model
+                best_model_name = model['type']
+                best_model_config = model
+        
+
+    else: 
+        X_train_new, X_val, y_train_new, y_val = split_data(X_train, y_train, config['model_selection']['train_val_split'])
+    
+    y_train_new = np.array(y_train_new)
+    y_val = np.array(y_val)
+
+    for model in config['models']:
+
+        pipeline = get_pipeline_for_model(model, config)
+        X_train_processed = pipeline.fit_transform(X_train_new)
+
+        model_type = get_model(model['type'], model['params'])
+        trained_model = model_type.fit(X_train_processed, y_train_new)
+
+        X_val_processed = pipeline.transform(X_val)
+
+        # Predict, evaluate and plot
+        predictions = trained_model.predict(X_val_processed)
+        rmse = evaluate_model(y_val, predictions)
+
+        if config['logging']['plots']:
+            plot_predictions(y_val, predictions, model['type'], output_dir, dataset_name="validation")
+        
+        print(f"Model: {model['type']}, RMSE: {rmse:.4f}")
+
+        if rmse < best_rmse:
+            best_rmse = rmse
+            best_model = trained_model
+            best_model_name = model['type']
+            best_model_config = model
+
+    print(f"Best Model: {best_model_name}, Best RMSE: {best_rmse:.4f}")
+
+    # Retrain on full training set
+    store_train_features(X_train, config)
+    full_pipeline = get_pipeline_for_model(best_model_config, config)
+    X_full_processed = full_pipeline.fit_transform(X_train, y_train)
     print(X_full_processed.shape)
     trained_model_full = best_model.fit(X_full_processed, y_train)
 
@@ -130,19 +210,11 @@ def train_evaluate_no_cross_val(model, config, X_train, y_train, output_dir, dat
             plot_predictions(y_val, predictions, model['type'], output_dir, dataset_name="validation")
         
         print(f"Model: {model['type']}, RMSE: {rmse:.4f}")
-
-    if rmse < best_rmse:
-        best_rmse = rmse
-        best_model = trained_model
-        best_model_name = model['type']
-        best_model_config = model
-
-    print(f"Best Model: {best_model_name}, Best RMSE: {best_rmse:.4f}")
     
     return rmse, trained_model
 
 
-def train_evaluate_with_cross_val(model, config, X_train, y_train, X_val, y_val):
+def train_evaluate_with_cross_val(model, config, X_train, y_train):
 
     pipeline = get_pipeline_for_model(model, config)
     model_type = get_model(model['type'], model['params'])
