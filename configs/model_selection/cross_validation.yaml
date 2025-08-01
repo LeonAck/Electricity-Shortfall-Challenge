@@ -1,9 +1,10 @@
 
-train_val_split: null
 use_cross_validation: true
-split_type: TimeSeriesSplit
+split_type: 'time_series'
 n_splits: 5
-scoring: root_mean_squared_error
-tuning: false
-search_type: grid
-random_search_n_iter: 20
+scoring_metric: 'neg_mean_squared_error'  # Correct scoring metric
+tuning: true  # Enable tuning
+search_type: grid  # or 'random' for RandomizedSearchCV
+random_search_n_iter: 20  # Only used if search_type is 'random'
+n_jobs: -1
+verbose: 2

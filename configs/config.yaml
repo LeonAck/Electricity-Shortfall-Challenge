@@ -6,7 +6,7 @@ defaults:
   - data: default
   - preprocessing: default
   - model_selection: default
-  - models: shallow_and_arima
+  - models: baseline
   - _self_
 
 # Global seed (can be overridden in run/base.yaml or specific run)
