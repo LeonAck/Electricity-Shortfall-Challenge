@@ -1,0 +1,13 @@
+# configs/config.yaml
+defaults:
+  - run: base              
+  - logging: default
+  - output: default
+  - data: default
+  - preprocessing: default
+  - model_selection: cross_validation
+  - models: baseline
+  - _self_
+
+# Global seed (can be overridden in run/base.yaml or specific run)
+seed: 42

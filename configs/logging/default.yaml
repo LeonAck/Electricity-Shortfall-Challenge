@@ -3,4 +3,5 @@ mlflow_enabled: true
 artifact_dir: artifacts/${run.run_id}
 experiment_name: "energy_forecasting"
 tracking_uri: "file:./mlruns" 
+registered_model_name: "energy-forecast-model"
 plots: false

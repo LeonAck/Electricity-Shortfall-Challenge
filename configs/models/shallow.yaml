@@ -1,19 +1,23 @@
-
+models:
+# Linear models
 - type: LinearRegression
   params: {}
   scaling: true
 
-# Linear models with regularization
 - type: Ridge
   params:
-    alpha: 10.0
+    alpha: 1.0  # Default value
     random_state: ${seed}
+  tuning_params:
+    alpha: [0.1, 1.0, 10.0, 100.0]
   scaling: true
 
 - type: Lasso
   params:
     alpha: 1.0
     random_state: ${seed}
+  tuning_params:
+    alpha: [0.01, 0.1, 1.0, 10.0]
   scaling: true
 
 - type: ElasticNet
@@ -21,6 +25,9 @@
     alpha: 1.0
     l1_ratio: 0.5
     random_state: ${seed}
+  tuning_params:
+    alpha: [0.1, 1.0, 10.0]
+    l1_ratio: [0.1, 0.3, 0.5, 0.7, 0.9]
   scaling: true
 
 # Tree models
@@ -29,6 +36,11 @@
     n_estimators: 100
     max_depth: 10
     random_state: ${seed}
+  tuning_params:
+    n_estimators: [50, 100, 200]
+    max_depth: [5, 10, 20, None]
+    min_samples_split: [2, 5, 10]
+    min_samples_leaf: [1, 2, 4]
   scaling: false
 
 - type: ExtraTreesRegressor
@@ -36,6 +48,10 @@
     n_estimators: 100
     max_depth: 10
     random_state: ${seed}
+  tuning_params:
+    n_estimators: [50, 100, 200]
+    max_depth: [5, 10, 20, None]
+    min_samples_split: [2, 5, 10]
   scaling: false
 
 - type: GradientBoostingRegressor
@@ -44,6 +60,10 @@
     max_depth: 4
     learning_rate: 0.1
     random_state: ${seed}
+  tuning_params:
+    n_estimators: [50, 100, 200]
+    max_depth: [3, 4, 5, 6]
+    learning_rate: [0.01, 0.1, 0.2]
   scaling: false
 
 - type: XGBRegressor
@@ -52,12 +72,20 @@
     max_depth: 4
     learning_rate: 0.1
     random_state: ${seed}
+  tuning_params:
+    n_estimators: [50, 100, 200]
+    max_depth: [3, 4, 5, 6]
+    learning_rate: [0.01, 0.1, 0.2]
   scaling: false
 
 # Other models
 - type: KNeighborsRegressor
   params:
     n_neighbors: 8
+  tuning_params:
+    n_neighbors: [3, 5, 8, 12, 15]
+    weights: ['uniform', 'distance']
+    algorithm: ['auto', 'ball_tree', 'kd_tree']
   scaling: true
 
 - type: SVR
@@ -65,4 +93,9 @@
     kernel: 'rbf'
     C: 10.0
     gamma: 'scale'
+  tuning_params:
+    C: [0.1, 1.0, 10.0, 100.0]
+    gamma: ['scale', 'auto', 0.001, 0.01, 0.1, 1.0]
+    kernel: ['rbf', 'poly', 'sigmoid']
+    epsilon: [0.01, 0.1, 0.2, 0.5]
   scaling: true
