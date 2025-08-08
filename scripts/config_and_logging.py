@@ -39,7 +39,7 @@ def hydra_main(cfg: DictConfig) -> DictConfig:
 def generate_run_id(config):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_name = config["run"].get("run_name", "run")
-    return f"_{timestamp}"
+    return f"{run_name}_{timestamp}"
 
 def create_output_dir(run_name, run_id, config):
     output_dir = os.path.join(f"{config['output']['saved_models_folder']}/{run_name}/", run_id)
@@ -91,7 +91,7 @@ def log_to_mlflow(config, output_dir, run_id, model_name, model_object, metrics,
         # Log model (skip if AutoReg or not sklearn)
         if model_name != "AR1":
             try:
-                mlflow.sklearn.log_model(model_object, artifact_path="model")
+                mlflow.sklearn.log_model(model_object, name="model")
             except Exception as e:
                 print(f"MLflow model logging failed: {e}")
 

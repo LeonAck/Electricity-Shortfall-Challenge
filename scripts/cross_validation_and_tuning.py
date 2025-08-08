@@ -1,43 +1,35 @@
 from sklearn.model_selection import TimeSeriesSplit, GridSearchCV, RandomizedSearchCV
 import omegaconf
 
-from sklearn.metrics import make_scorer, mean_squared_error
-import numpy as np
-
-def rmse_scorer(y_true, y_pred):
-    """Custom RMSE scorer that handles the squared parameter"""
-    rmse_score = np.sqrt(mean_squared_error(y_true, y_pred))
-    return make_scorer(
-    rmse_score,
-    greater_is_better=False  # Lower RMSE is better
-    )
-
-def create_rmse_scorer():
-    """
-    Create a proper RMSE scorer using make_scorer
-    """
-    def rmse_calculation(y_true, y_pred):
-        """Inner function that calculates RMSE"""
-        return np.sqrt(mean_squared_error(y_true, y_pred))
-    
-    # Pass the FUNCTION to make_scorer, not the result
-    return make_scorer(
-        rmse_calculation,  # ← This is a function, not a value
-        greater_is_better=False,  # Lower RMSE is better
-        response_method='predict'
-    )
 
 def get_search_type(config):
+    search_type = config['model_selection']['search_type']
+    search_params = config['model_selection']['search_type_params'][search_type]
 
-    if config['model_selection']['search_type'] == 'grid':
-        return GridSearchCV
+    if search_type== 'grid':
+        RandomizedSearchCV()
+        return GridSearchCV(**search_params)
     
-    elif config['model_selection']['search_type'] == 'random':
-        return RandomizedSearchCV
+    elif search_type== 'random':
+        return RandomizedSearchCV(**search_params)
     
     else:
-        raise ValueError(f"Unknown search type: {config['model_selection']['search_type']}")
+        raise ValueError(f"Unknown search type: {search_type}")
     
+
+def get_search_class_and_params(config):
+    """
+    Returns the search class and its specific parameters (like n_iter).
+    """
+    search_type = config['model_selection']['search_type']
+    search_params = config['model_selection']['search_type_params'].get(search_type, {})
+
+    if search_type == 'grid':
+        return GridSearchCV, {'param_grid': None}  
+    elif search_type == 'random':
+        return RandomizedSearchCV, {'param_distributions': None, **search_params}
+    else:
+        raise ValueError(f"Unknown search type: {search_type}")
 
 def get_split_type(config):
 
@@ -48,14 +40,15 @@ def get_split_type(config):
         raise ValueError(f"Unknown split type: {config['model_selection']['split_type']}")
     
 
-def get_param_grid(model, config):
+def get_param_grid(model_config):
     """
     Get the parameter grid for hyperparameter tuning based on the model type.
     """
     
     try:
-        return model['tuning_params']
+        return model_config['tuning_params']
        
     except omegaconf.errors.KeyValidationError as e:
-        raise ValueError(f"Model type {model['type']} has no param grid { str(e) }") 
-        print(config['models'])
+        print(model_config)
+        raise ValueError(f"Model type {model_config['type']} has no param grid { str(e) }") 
+        

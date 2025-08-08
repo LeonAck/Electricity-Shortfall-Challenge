@@ -1,6 +1,6 @@
 # configs/data/default.yaml
 
-
+version: "v1.0"
 data_path: 'data/data_raw/'
 train_path: 'df_train.csv'
 test_path: 'df_test.csv'
