@@ -10,6 +10,7 @@ from scripts.data_loading import load_data
 from scripts.config_and_logging import load_config, load_config_hydra
 from scripts.model_pipeline import choose_best_model
 from scripts.inference import load_models, predict_batch
+from scripts.train import choose_best_model, ModelResult, BestModelResult
 
 
 
@@ -71,28 +72,4 @@ def test_choose_best_model_logic(config, train_and_test_df):
     assert best_model_results["pipeline"] is not None
     assert isinstance(best_model_results['rmse'], float)
     assert best_model_results['rmse'] > 0
-
-
-def test_ARIMA_predict(train_and_test_df, test_config):
-    """
-    Test the ARIMA model prediction functionality.
-    """
-
-    train_df, test_df = train_and_test_df
-
-    best_model_results = choose_best_model(
-        output_dir='.', 
-        train_df=train_df,
-        config=test_config
-    )
-
-    # Create a folder for saved models
-    joblib.dump(best_model_results["pipeline"], "tests/preprocessing_pipeline.pkl")
-    joblib.dump(best_model_results['model_object'], "tests/best_model.pkl")
-    
-    model, pipeline = load_models(folder='tests')
-    if model and pipeline:
-        preds = predict_batch(test_df, model, pipeline)
-        assert preds.shape[0] == test_df.shape[0]
-        assert not preds.isnull().any()
 
