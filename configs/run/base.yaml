@@ -1,5 +1,7 @@
-
 run_name: base
 submit: false
 save_model: true
 gcloud: true
+stage: experiment
+data_version: "v1.0"
+trigger: "manual" # Options: "manual", "scheduled", "retrain"
