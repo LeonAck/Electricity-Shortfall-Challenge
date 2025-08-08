@@ -5,6 +5,7 @@ from google.cloud import storage
 import os
 import pandas as pd
 from saved_models.data_validation_model import PredictionRequest  # ← Import here
+import json
 
 app = Flask(__name__)
 
@@ -13,10 +14,26 @@ MODEL_VERSION = os.getenv("MODEL_VERSION", "v1")  # Get version from env
 BUCKET_NAME = "forecast_bucket_inference"
 
 def load_model():
+    """Load the latest production model from GCS (via latest/model_info.json)"""
     client = storage.Client()
     bucket = client.bucket(BUCKET_NAME)
-    blob = bucket.blob(f"models/{MODEL_VERSION}/combined_model.joblib")
-    blob.download_to_filename("/tmp/model.joblib")
+
+    # Step 1: Download model_info.json to find latest model
+    info_blob = bucket.blob("models/energy-forecast-model/latest/model_info.json")
+    info_blob.download_to_filename("/tmp/model_info.json")
+
+    with open("/tmp/model_info.json", "r") as f:
+        model_info = json.load(f)
+
+    # Step 2: Extract model path
+    latest_model_gcs_path = model_info["latest_model"]  # "gs://bucket/..."
+    # Convert to blob path
+    blob_path = latest_model_gcs_path.replace(f"gs://{BUCKET_NAME}/", "")
+
+    # Step 3: Download and load model
+    model_blob = bucket.blob(blob_path)
+    model_blob.download_to_filename("/tmp/model.joblib")
+
     return joblib.load("/tmp/model.joblib")
 
 model = load_model()
