@@ -5,8 +5,8 @@ defaults:
   - output: default
   - data: default
   - preprocessing: default
-  - model_selection: default
-  - models: arima
+  - model_selection: cross_validation
+  - models: test
   - _self_
 
 # Global seed (can be overridden in run/base.yaml or specific run)
