@@ -23,9 +23,9 @@ from google.cloud import storage
 from typing import Dict, Any, Tuple, Optional
 
 # Import your modules (ensure they're in Python path)
-from scripts.data_loading import load_data, test_training_data
-from scripts.config_and_logging import load_config_hydra
-from scripts.train import choose_best_model
+from src.data_loading import load_data, test_training_data
+from src.config_and_logging import load_config_hydra
+from src.train import choose_best_model
 
 # =============================================================================
 # CONFIGURATION
@@ -94,7 +94,7 @@ def train_energy_forecast_model(
     train_df, _, _ = load_data(config)
 
     logger.info("Starting model training and selection...")
-    best_model_results = choose_best_model(None, train_df, config)
+    best_model_results = choose_best_model(train_df, config)
 
     temp_model_path = f"temp_model_{execution_date.replace('-', '')}.joblib"
     joblib.dump(best_model_results.full_pipeline, temp_model_path)
