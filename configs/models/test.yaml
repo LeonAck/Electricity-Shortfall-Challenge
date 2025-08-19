@@ -1,0 +1,13 @@
+
+- type: Ridge
+  params: {}
+  scaling: true
+  tuning_params: {}
+
+- type: Ridge
+  params:
+    alpha: 1.0  # Default value
+    random_state: ${seed}
+  tuning_params:
+    alpha: [0.1, 1.0, 10.0, 100.0]
+  scaling: true
