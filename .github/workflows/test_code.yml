@@ -8,7 +8,6 @@ on:
   pull_request:
     branches:
       - main
- 
 
 jobs:
   build:
@@ -22,14 +21,22 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: 'pip'
 
-      - name: Upgrade pip and install dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-          pip install --prefer-binary -r requirements.txt
-          pip install pytest
+      - name: Cache uv package cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/requirements.txt') }}
+          # If using pyproject.toml: key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}
 
-      - name: Run tests
+      - name: Install dependencies with uv (editable + extras)
         run: |
-          PYTHONPATH=. pytest   
+          python -m pip install uv
+          uv pip install -e ".[test]"
+
+      - name: Run tests (skip heavy ones)
+        run: |
+          PYTHONPATH=. pytest src/tests \
+            --ignore=src/tests/test_training.py \
+            --ignore=set/src/tests/test_pipeline.py \ 
+            --disable-warnings

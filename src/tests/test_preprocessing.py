@@ -4,20 +4,20 @@ import numpy as np
 import os
 from pathlib import Path
 
-from src.preprocessing import WeatherDataPreprocessor, create_preprocessing_pipeline, SimplifiedPatternImputer, TimeAwareKNNImputer
-from src.data_loading import load_data
-from src.config_and_logging import load_config, load_config_hydra
+from electricity_forecast.preprocessing import WeatherDataPreprocessor, create_preprocessing_pipeline, SimplifiedPatternImputer, TimeAwareKNNImputer
+from electricity_forecast.data_loading import load_data
+from electricity_forecast.config_and_logging import load_config, load_config_hydra
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 
 
 # Get the project root directory
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent
 config_path = project_root / "configs"
 
 
 @pytest.fixture
-def config(config_name="config_cv.yaml"):
+def config(config_name="config_test.yaml"):
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config directory not found at {config_path}")
     return load_config_hydra(config_name=config_name, config_path=str(config_path))
