@@ -1,9 +1,9 @@
 from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.metrics import make_scorer, root_mean_squared_error
 from sklearn.pipeline import Pipeline
-from src.models import get_model
-from src.preprocessing import get_pipeline_for_model
-from src.cross_validation_and_tuning import get_split_type, get_search_class_and_params
+from electricity_forecast.models import get_model
+from electricity_forecast.preprocessing import get_pipeline_for_model
+from electricity_forecast.cross_validation_and_tuning import get_split_type, get_search_class_and_params
 
 import logging
 from omegaconf import OmegaConf

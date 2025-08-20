@@ -1,11 +1,11 @@
 import numpy as np
 from sklearn.metrics import mean_squared_error
-from src.plots import plot_predictions
-from src.models import get_model
-from src.preprocessing import get_pipeline_for_model
-from src.cross_validation_and_tuning import get_search_type, get_split_type, get_param_grid
+from electricity_forecast.plots import plot_predictions
+from electricity_forecast.models import get_model
+from electricity_forecast.preprocessing import get_pipeline_for_model
+from electricity_forecast.cross_validation_and_tuning import get_search_type, get_split_type, get_param_grid
 from sklearn.model_selection import TimeSeriesSplit
-from src.config_and_logging import store_train_features
+from electricity_forecast.config_and_logging import store_train_features
 
 # goed kijken hoe dit zit
 def split_data(X_train: np.array, y_train: np.array, train_val_split=0.2):
