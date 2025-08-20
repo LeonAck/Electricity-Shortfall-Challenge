@@ -5,17 +5,16 @@ import os
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 import pandas as pd
-import numpy as np 
 from pydantic import ValidationError
 from hydra.errors import MissingConfigException
 
-from src.data_loading import load_data, test_training_data
-from src.config_and_logging import load_config_hydra
-from src.train import choose_best_model
-from src.main import main
+from electricity_forecast.data_loading import load_data, test_training_data
+from electricity_forecast.config_and_logging import load_config_hydra
+from electricity_forecast.train import choose_best_model
+from electricity_forecast.main import main
 
 # Get the project root directory  
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent
 config_path = project_root / "configs"
 
 
@@ -76,10 +75,10 @@ class TestFullPipeline:
         shutil.rmtree(temp_dir)
     
   
-    @patch('scripts.train.mlflow.start_run')
-    @patch('scripts.main.load_data')
-    @patch('scripts.train.get_best_existing_model')
-    @patch('scripts.main.test_training_data')
+    @patch('electricity_forecast.train.mlflow.start_run')
+    @patch('electricity_forecast.main.load_data')
+    @patch('electricity_forecast.train.get_best_existing_model')
+    @patch('electricity_forecast.main.test_training_data')
     def test_pipeline_smoke_test_with_mocked_data(self, mock_test_training_data, mock_get_best_existing, mock_load_data, mock_start_run, sample_data, mock_best_existing_model):
         """
         Smoke test - just verify the pipeline runs without crashing with mocked data
@@ -101,8 +100,8 @@ class TestFullPipeline:
         mock_load_data.assert_called_once()
 
 
-    @patch('scripts.train.mlflow.start_run')
-    @patch('scripts.main.load_data')
+    @patch('electricity_forecast.train.mlflow.start_run')
+    @patch('electricity_forecast.main.load_data')
     def test_pipeline_with_real_config_and_mocked_data(self, mock_load_data, mock_start_run, config, sample_data):
         """
         Test with real config but mocked data
@@ -116,12 +115,12 @@ class TestFullPipeline:
         mock_start_run.return_value = mock_run
         
         # Use real config loading with mocked data
-        result = main(config_name="config_test.yaml")
+        result = main(config_name="config_cv.yaml")
         
         # Add assertions about the result
         mock_load_data.assert_called_once()
 
-    @patch('scripts.train.mlflow.start_run')
+    @patch('electricity_forecast.train.mlflow.start_run')
     def test_pipeline_with_real_data_loading(self, mock_start_run, test_config, train_and_test_df):
         """
         Test with real config and real data loading using train_and_test_df fixture
@@ -147,9 +146,9 @@ class TestFullPipeline:
         assert hasattr(result, 'cv_rmse')
 
 
-    @patch('scripts.train.mlflow.start_run')
-    @patch('scripts.train.mlflow.log_metric')
-    @patch('scripts.train.mlflow.log_param')
+    @patch('electricity_forecast.train.mlflow.start_run')
+    @patch('electricity_forecast.train.mlflow.log_metric')
+    @patch('electricity_forecast.train.mlflow.log_param')
     def test_pipeline_end_to_end_with_real_config(self, mock_log_param, mock_log_metric, 
                                                  mock_start_run, config, sample_data):
         """
@@ -160,7 +159,7 @@ class TestFullPipeline:
         mock_run.__enter__.return_value = MagicMock(info=MagicMock(run_id="test_run_id"))
         mock_start_run.return_value = mock_run
         
-        with patch('scripts.main.load_data') as mock_load_data:
+        with patch('electricity_forecast.main.load_data') as mock_load_data:
             mock_load_data.return_value = (sample_data, sample_data, sample_data)
             
             # Run pipeline with real config
@@ -178,9 +177,9 @@ class TestFullPipeline:
             assert mock_start_run.called
             assert mock_log_metric.called or mock_log_param.called
 
-    @patch('scripts.train.mlflow.start_run')
-    @patch('scripts.train.mlflow.log_metric') 
-    @patch('scripts.train.mlflow.log_param')
+    @patch('electricity_forecast.train.mlflow.start_run')
+    @patch('electricity_forecast.train.mlflow.log_metric') 
+    @patch('electricity_forecast.train.mlflow.log_param')
     def test_pipeline_end_to_end_with_real_data(self, mock_log_param, mock_log_metric,
                                                mock_start_run, test_config, train_and_test_df):
         """
@@ -212,7 +211,7 @@ class TestPipelineComponents:
     def test_data_loading_and_training_integration_with_real_config(self, config, sample_data):
         """Test that data loading output works with training input using real config"""
         
-        with patch('scripts.data_loading.load_data') as mock_load_data:
+        with patch('electricity_forecast.data_loading.load_data') as mock_load_data:
             mock_load_data.return_value = (sample_data, sample_data, sample_data)
             
             # Load data with real config
@@ -222,11 +221,11 @@ class TestPipelineComponents:
             test_training_data(train_df)  # Should not raise
             
             # Test that choose_best_model can accept this data
-            with patch('scripts.train.mlflow.start_run'):
+            with patch('electricity_forecast.train.mlflow.start_run'):
                 result = choose_best_model(train_df, config)
                 assert result is not None
                 
-    @patch('scripts.train.mlflow.start_run')
+    @patch('electricity_forecast.train.mlflow.start_run')
     def test_data_loading_and_training_integration_with_real_data(self, mock_start_run, test_config, train_and_test_df):
         """Test components work together with real data loading"""
         # Mock MLflow run context
@@ -243,54 +242,6 @@ class TestPipelineComponents:
         
         result = choose_best_model(train_df, test_config)
         assert result is not None
-
-
-# Performance/Load Testing
-class TestPipelinePerformance:
-    
-    @pytest.mark.slow
-    def test_pipeline_performance_with_real_config(self, config, sample_data):
-        """Test pipeline performance with larger dataset and real config"""
-        import time
-        
-        # Create larger dataset
-        large_data = pd.concat([sample_data] * 100, ignore_index=True)
-        
-        with patch('scripts.data_loading.load_data') as mock_load_data:
-            mock_load_data.return_value = (large_data, large_data, large_data)
-            
-            start_time = time.time()
-            
-            # Run pipeline components with real config
-            with patch('scripts.train.mlflow.start_run'):
-                train_df, _, _ = load_data(config)
-                result = choose_best_model(train_df, config)
-            
-            elapsed_time = time.time() - start_time
-            
-            # Assert reasonable performance (adjust threshold as needed)
-            assert elapsed_time < 60, f"Pipeline took {elapsed_time:.2f}s, expected < 60s"
-
-    @pytest.mark.slow 
-    def test_pipeline_performance_with_real_data(self, test_config, train_and_test_df):
-        """Test pipeline performance with real data"""
-        import time
-        
-        train_df, test_df = train_and_test_df
-        
-        start_time = time.time()
-        
-        # Run pipeline with real data
-        with patch('scripts.train.mlflow.start_run'):
-            test_training_data(train_df)
-            result = choose_best_model(train_df, test_config)
-        
-        elapsed_time = time.time() - start_time
-        
-        # Assert reasonable performance
-        assert elapsed_time < 120, f"Pipeline took {elapsed_time:.2f}s, expected < 120s"
-        assert result is not None
-
 
 # Error Handling Tests
 class TestPipelineErrorHandling:

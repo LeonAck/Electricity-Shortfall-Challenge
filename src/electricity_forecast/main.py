@@ -1,6 +1,6 @@
-from src.data_loading import load_data, test_training_data
-from src.config_and_logging import load_config_hydra
-from src.train import choose_best_model
+from electricity_forecast.data_loading import load_data, test_training_data
+from electricity_forecast.config_and_logging import load_config_hydra
+from electricity_forecast.train import choose_best_model
 
 from pathlib import Path
 import logging
