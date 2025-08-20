@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies with uv (editable + extras)
         run: |
           python -m pip install uv
+          uv venv .venv
+          source .venv/bin/activate 
+          python -m pip install uv
           uv pip install -e ".[test]"
 
       - name: Run tests (skip heavy ones)
