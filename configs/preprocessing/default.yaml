@@ -1,0 +1,8 @@
+
+column_to_impute: 'Valencia_pressure'
+imputer:
+  type: TimeAwareKNNImputer
+  params:
+    n_neighbors: 5
+freq: '3h'
+add_time_dummies: 'cyclical'

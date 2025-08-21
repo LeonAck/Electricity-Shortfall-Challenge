@@ -1,17 +1,25 @@
-# Use an official Python image as the base
+# Use official Python slim image
 FROM python:3.11-slim
 
-# Set a working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy your requirements file and install dependencies
-COPY requirements.txt .
-COPY preprocessing.py .
+# Install uv for dependency management
+RUN pip install --no-cache-dir uv
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy everything needed for installation first
+COPY pyproject.toml uv.lock* README.md ./
+COPY src/ ./src/
 
-# Copy the rest of your application code into the container
-COPY . .
+# Install dependencies system-wide
+RUN uv pip install --system --no-cache .
 
-# Specify the default command to run when the container starts
-CMD ["python", "main.py"]
+# Copy the Flask app entrypoint
+COPY app.py ./app.py
+
+# Set environment variables
+ENV MODEL_VERSION="v1"
+ENV PYTHONPATH="/app/src"
+
+# Default command to run the app
+CMD ["python", "app.py"]

@@ -1,0 +1,8 @@
+# configs/data/default.yaml
+
+version: "v1.0"
+data_path: 'data/data_raw/'
+train_path: 'df_train.csv'
+test_path: 'df_test.csv'
+submission_path: 'sample_submission_load_shortfall.csv'
+target_column: load_shortfall_3h
