@@ -7,14 +7,12 @@ WORKDIR /app
 # Install uv for dependency management
 RUN pip install --no-cache-dir uv
 
-# Copy dependency files for caching
+# Copy everything needed for installation first
 COPY pyproject.toml uv.lock* ./
+COPY src/ ./src/
 
 # Install dependencies system-wide
 RUN uv pip install --system --no-cache .
-
-# Copy source code and tests
-COPY src/ ./src/
 
 # Copy the Flask app entrypoint
 COPY app.py ./app.py
