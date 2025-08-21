@@ -1,26 +1,30 @@
-# Use an official Python image as the base
+# Use official Python slim image
 FROM python:3.11-slim
 
-# Set a working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy your requirements file and install dependencies
-COPY requirements.txt .
+# Install uv for dependency management
+RUN pip install --no-cache-dir uv
 
-# Copy the project files
-COPY scripts/ ./scripts/
+# Copy dependency files for caching
+COPY pyproject.toml uv.lock* ./
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies system-wide
+RUN uv pip install --system --no-cache .
 
-# Add to your existing Dockerfile AFTER installing dependencies
-COPY app.py /app/
-RUN pip install flask google-cloud-storage
+# Copy source code and tests
+COPY src/ ./src/
 
-# Set model version as ENV (will be overridden at deploy time)
+# Copy the Flask app entrypoint
+COPY app.py ./app.py
+
+# Set environment variables
 ENV MODEL_VERSION="v1"
+ENV PYTHONPATH="/app/src"
 
+# Optional: expose Flask port
+EXPOSE 5000
 
-COPY . .
-
-# Specify the default command to run when the container starts
+# Default command to run the app
 CMD ["python", "app.py"]
