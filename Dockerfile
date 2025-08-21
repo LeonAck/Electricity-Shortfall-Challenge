@@ -21,8 +21,5 @@ COPY app.py ./app.py
 ENV MODEL_VERSION="v1"
 ENV PYTHONPATH="/app/src"
 
-# Optional: expose Flask port
-EXPOSE 5000
-
 # Default command to run the app
 CMD ["python", "app.py"]
