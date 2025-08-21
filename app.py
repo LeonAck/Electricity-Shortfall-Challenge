@@ -4,7 +4,7 @@ import joblib
 from google.cloud import storage
 import os
 import pandas as pd
-from saved_models.data_validation_model import PredictionRequest  # ← Import here
+from src.electricity_forecast.data_validation_model import PredictionRequest  # ← Import here
 import json
 
 app = Flask(__name__)
