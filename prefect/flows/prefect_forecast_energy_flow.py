@@ -12,20 +12,19 @@ from prefect import flow, task, get_run_logger
 from prefect.tasks import task
 from prefect.runtime import flow_run
 
-from datetime import datetime, timedelta
-import logging
+from datetime import datetime
 from pathlib import Path
 import joblib
 import json
 import os
 import tempfile
 from google.cloud import storage
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any,  Optional
 
 # Import your modules (ensure they're in Python path)
-from src.data_loading import load_data, test_training_data
-from src.config_and_logging import load_config_hydra
-from src.train import choose_best_model
+from src.electricity_forecast.data_loading import load_data, test_training_data
+from src.electricity_forecast.config_and_logging import load_config_hydra
+from src.electricity_forecast.train import choose_best_model
 
 # =============================================================================
 # CONFIGURATION
