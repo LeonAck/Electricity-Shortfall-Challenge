@@ -43,6 +43,6 @@ jobs:
         run: |
           .venv/bin/python -m pytest src/tests \
             --ignore=src/tests/test_training.py \
-            --ignore=src/tests/test_training.py \ 
-            --ignore=set/src/tests/test_pipeline.py \ 
+            --ignore=src/tests/test_training.py \
+            --ignore=set/src/tests/test_pipeline.py \
             --disable-warnings
