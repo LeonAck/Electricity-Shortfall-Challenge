@@ -70,25 +70,15 @@
 
 ---
 
-## 💻 Installation & Setup
-1. **Install `uv`** (faster package manager):
-   ```bash
-   pip install uv
-   ```
-
-
-# Electricity Shortfall Challenge
-
-## 🚀 Getting Started
-
 ### Clone and Set Up
 ```bash
-git clone https://github.com/your-username/Electricity-Shortfall-Challenge.git
+git clone https://github.com/LeonAck/Electricity-Shortfall-Challenge.git
 cd Electricity-Shortfall-Challenge
 ```
 
-### Install Dependencies
+### Install  `uv` and dependencies
 ```bash
+pip install uv
 uv sync
 ```
 This installs all required packages including: scikit-learn, xgboost, mlflow, hydra-core, prefect, flask, google-cloud-storage.
@@ -113,34 +103,12 @@ from src.electricity_forecast.train import choose_best_model
 best_result = choose_best_model(train_df, config)
 ```
 
-## 🔄 Prefect Workflow
-
-The `prefect_forecast_energy_flow.py` file defines a scheduled workflow that:
-- Validates data quality
-- Trains candidate models
-- Selects the best model (vs current production)
-- Uploads improved models to Google Cloud Storage (GCS)
-- Validates upload integrity
-- Sends logging notifications
-
-### Run Locally
-```bash
-python prefect_forecast_energy_flow.py
-```
-
-### Schedule Weekly
-Uncomment the scheduler in the flow to run every week:
-```python
-energy_forecast_flow.schedule = IntervalSchedule(interval=timedelta(weeks=1))
-```
-Requires Prefect Cloud or Prefect Server.
-
 ## 📈 Model Evaluation & Selection
 
 - **Cross-validation**: TimeSeriesSplit or custom time-aware splits
 - **Hyperparameter tuning**: GridSearchCV via config
 - **Model factory**: `get_model()` supports 15+ regressors
-- **Final decision**: New model only replaces production if it improves CV-RMSE
+- **Final decision**: New model only replaces production model if it improves CV-RMSE
 
 ## 🧪 MLflow Integration
 
@@ -148,14 +116,6 @@ Requires Prefect Cloud or Prefect Server.
 - Registers best model in MLflow Model Registry
 - Promotes winning version to production alias
 - Enables comparison with existing best model
-
-Ensure MLflow tracking URI is set in config:
-```yaml
-logging:
-  tracking_uri: "http://localhost:5000"  # or remote server
-  experiment_name: "energy-shortfall-cv"
-  registered_model_name: "energy-forecast-model"
-```
 
 ## 🌐 API Deployment with Flask
 
