@@ -12,6 +12,7 @@ COPY app.py ./app.py
 
 # Install package in editable mode so imports work
 RUN uv pip install --system --no-cache --editable .
+
 # Optional: verify
 RUN python -c "from electricity_forecast import __name__; print('Package available')"
 
