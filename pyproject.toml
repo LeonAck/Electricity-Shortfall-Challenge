@@ -30,12 +30,15 @@ test = [
   "coverage"
 ]
 
-[project.scripts]
-electricity-forecast = "electricity_forecast:main"
-
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [build-system]
 requires = ["uv_build>=0.8.9,<0.9.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pandas-profiling>=3.0.0",
+    "sweetviz>=2.3.1",
+]
