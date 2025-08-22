@@ -39,6 +39,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "autoviz>=0.1.732",
     "pandas-profiling>=3.0.0",
     "sweetviz>=2.3.1",
 ]
