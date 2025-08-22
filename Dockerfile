@@ -11,8 +11,12 @@ RUN pip install --no-cache-dir uv
 COPY pyproject.toml uv.lock* README.md ./
 COPY src/ ./src/
 
-# Install dependencies system-wide
-RUN uv pip install --system --no-cache .
+# Clean old builds and force fresh install
+RUN rm -rf dist *.egg-info __pycache__ && \
+    uv pip install --system --no-cache .
+
+RUN echo "=== Checking installed package ===" \
+    && grep -R "scripts" /usr/local/lib/python3.11/site-packages || echo "No scripts found"
 
 # Copy the Flask app entrypoint
 COPY app.py ./app.py
