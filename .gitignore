@@ -1,2 +1,25 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.pytest_cache/
+.ruff_cache/**
+sklearn-env/
+src/__pycache__/
+
+# Virtual environments
+.venv
+.env
+
 mlruns/
-prefect/gcp/
+workflows/gcp/
+output/**
+saved_models/ 
+
+# Models
+models_energy-forecast-model_*
+synthetic_test_data_aligned.json
+test_input.json

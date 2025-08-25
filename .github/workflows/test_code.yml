@@ -3,8 +3,8 @@ name: Test code
 on:
   push:
     branches:
-      - main
-      - clean_code
+      - dev
+      
   pull_request:
     branches:
       - main
@@ -44,5 +44,5 @@ jobs:
           .venv/bin/python -m pytest src/tests \
             --ignore=src/tests/test_pipeline.py \
             --ignore=src/tests/test_training.py \
-            --ignore=set/src/tests/test_pipeline.py \
+            --ignore=set/src/tests/test_predict.py \
             --disable-warnings
