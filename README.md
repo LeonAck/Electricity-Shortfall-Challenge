@@ -59,12 +59,11 @@
 | `configs/` | Configuration files (logging, model selection, etc.) |
 | `data/` | Raw and processed data (`df_train.csv`, `df_test.csv`, `processed_data.parquet`) |
 | `notebooks/` | Exploration and analysis notebooks |
-| `prefect/flows/` | Prefect orchestration scripts |
-| `saved_models/` | Pydantic schema for API validation |
+| `workflows/flows/` | Prefect orchestration scripts |
 | `src/electricity_forecast/` | Core logic (training, preprocessing, models) |
-| `tests/` | Unit and integration tests |
+| `src/tests/` | Unit and integration tests |
 | `app.py` | Flask API for predictions |
-| `cloudbuild.yaml` | CI/CD pipeline configuration |
+| `.github/workflows/` | CI/CD pipeline configuration |
 | `Dockerfile` | Containerization for Cloud Run |
 | `pyproject.toml` | Project dependencies |
 
@@ -101,6 +100,22 @@ The main training logic is in `src/electricity_forecast/train.py`. It:
 ```python
 from src.electricity_forecast.train import choose_best_model
 best_result = choose_best_model(train_df, config)
+```
+
+## 🔄 Prefect Workflow
+
+The `prefect_forecast_energy_flow.py` file defines a scheduled workflow that:
+
+- Validates data quality
+- Trains candidate models
+- Selects the best model (vs current production)
+- Uploads improved models to Google Cloud Storage (GCS)
+- Validates upload integrity
+- Sends logging notifications
+
+Run Locally
+```PowerShell
+uv run python -m workflows.flows.prefect_forecast_energy_flow
 ```
 
 ## 📈 Model Evaluation & Selection
@@ -141,16 +156,6 @@ The model is served via a lightweight Flask API deployed on Google Cloud Run.
 ```json
 { "prediction": [234.5] }
 ```
-
-### Deploy to Cloud Run
-```bash
-gcloud run deploy energy-forecast-api \
-  --source . \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
-Automatically loads the latest model from GCS via `latest/model_info.json`.
 
 ## 🛠️ CI/CD with Google Cloud Build
 
