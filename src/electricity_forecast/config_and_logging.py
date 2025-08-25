@@ -10,20 +10,6 @@ import hydra
 from omegaconf import DictConfig
 from pathlib import Path
 
-
-def get_project_root():
-    """Get project root, works in both scripts and notebooks."""
-    # Method 1: Try __file__ if available (works in .py files)
-    try:
-        # If running from a script, use __file__
-        if '__file__' in globals():
-            return Path(__file__).resolve().parent
-    except NameError:
-        pass
-    
-    # Method 2: Look for project markers (works in notebooks and scripts)
-    root = find_project_root()
-    return root
     
 def run_with_config(cfg: DictConfig) -> dict:
     """The actual logic without Hydra decoration"""

@@ -40,7 +40,6 @@ jobs:
       - name: Deploy to Cloud Run
         run: |-
           gcloud run deploy energy-forecast-service \
-             --timeout=900s \
             --image=eu.gcr.io/energy-forecast-467113/energy-forecast-service:${{ github.sha }} \
             --region=europe-west4 \
             --platform=managed \

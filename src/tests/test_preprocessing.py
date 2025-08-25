@@ -6,7 +6,7 @@ from pathlib import Path
 
 from electricity_forecast.preprocessing import WeatherDataPreprocessor, create_preprocessing_pipeline, SimplifiedPatternImputer, TimeAwareKNNImputer
 from electricity_forecast.data_loading import load_data
-from electricity_forecast.config_and_logging import load_config, load_config_hydra
+from electricity_forecast.config_and_logging import load_config_hydra
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 
