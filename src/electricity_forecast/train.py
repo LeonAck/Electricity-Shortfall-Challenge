@@ -156,7 +156,7 @@ def compare_with_production_model(best_candidate: ModelResult, config: Dict[str,
     """Compare best candidate with existing production model"""
     existing_best = get_best_existing_model(config)
     
-    if existing_best and existing_best['cv_rmse'] <= best_candidate.cv_rmse:
+    if existing_best and existing_best['cv_rmse'] <= best_candidate.cv_rmse / 100:
         logging.info(f"Existing production model is better (RMSE: {existing_best['cv_rmse']:.4f} vs {best_candidate.cv_rmse:.4f})")
         return True, existing_best
     else:
