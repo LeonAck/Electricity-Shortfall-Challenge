@@ -6,7 +6,7 @@ defaults:
   - data: default
   - preprocessing: default
   - model_selection: cross_validation
-  - models: baseline
+  - models: shallow
   - _self_
 
 # Global seed (can be overridden in run/base.yaml or specific run)

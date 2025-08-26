@@ -10,6 +10,7 @@ from unittest.mock import patch, MagicMock
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.pipeline import Pipeline
 
+
 from electricity_forecast.data_loading import load_data
 from electricity_forecast.config_and_logging import load_config_hydra
 from electricity_forecast.train import (
@@ -68,7 +69,6 @@ def test_load_config_and_data(config, train_and_test_df):
     assert config['data']['target_column'] in train_df.columns
 
 
-
 @patch("electricity_forecast.train.get_model")
 def test_train_with_cross_validation(
     mock_get_model,          
@@ -97,6 +97,7 @@ def test_train_with_cross_validation(
     assert isinstance(cv_rmse, float)
     assert cv_rmse > 0
     mock_get_model.assert_called()
+
 
 
 @patch("electricity_forecast.train.GridSearchCV")
@@ -374,6 +375,7 @@ def test_choose_best_model_prefers_existing(
     config,
     train_and_test_df
 ):
+
     from electricity_forecast.train import choose_best_model, ModelResult, BestModelResult
 
     train_df, _ = train_and_test_df
@@ -492,4 +494,3 @@ def test_choose_best_model_trains_new(
     mock_log_and_register.assert_called_once_with(
         mock_final_model, "rf", 0.2, config
     )
-
