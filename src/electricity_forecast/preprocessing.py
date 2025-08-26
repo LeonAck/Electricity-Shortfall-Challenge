@@ -16,19 +16,9 @@ def get_pipeline_for_model(model, config):
     Returns:
         Pipeline: A scikit-learn Pipeline object configured for the model.
     """
-    # Check if the model type is an ARIMA model
-    if model["type"] in ["AR", "MA1"]:
-        # Extract parameters from the config structure
-        params = model.get('params', {})
-        
-        # Return data transformation pipeline only
-        return create_timeseries_preprocessing_pipeline(
-            model_type=model["type"],
-            **params  # Unpack all parameters from the config
-        )
-    
+
     # Check if model is a scikit-learn model
-    elif model["type"] in [
+    if model["type"] in [
         'LinearRegression',
         'RandomForest',
         'Ridge',
@@ -51,19 +41,6 @@ def get_pipeline_for_model(model, config):
 
     else:
         raise ValueError(f"No preprocessing pipeline defined for model_type: {model['type']}")
-
-
-def create_timeseries_preprocessing_pipeline(model_type, **kwargs):
-    """Create preprocessing pipeline for time series models"""
-    
-    if model_type in ["MA", "MA1", "AR"]:  # Handle both MA and MA1
-        return Pipeline([
-            ('ma_transform', ARIMATransformer(
-            ))
-        ])
-        
-    else:
-        raise ValueError(f"Unknown time series model type: {model_type}")
 
 
 # Creating complete preprocessing pipelines with different imputation methods
@@ -92,16 +69,8 @@ def create_preprocessing_pipeline(imputer, freq='3h',
     if scaling:
         steps.append(('scaler', StandardScaler()))
 
-    # Always convert to numpy
-    steps.append(('to_numpy', ToNumpyArray()))  
-
     return Pipeline(steps)    
 
-class ARIMATransformer(BaseEstimator, TransformerMixin):
-    def fit(self, X, y=None):
-        return self
-    def transform(self, X):
-        return X
 
 def get_imputer(config):
     imp_cfg = config['preprocessing']['imputer']
@@ -143,17 +112,15 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
         if 'time' in df.columns:
             df = self._set_datetime_as_index(df)
         
-        # Remove any unwanted columns
-        if 'Unnamed: 0' in df.columns:
-            df = df.drop(columns=['Unnamed: 0'])
-
-        # If target column is still present
-        if "load_shortfall_3h" in df.columns:
-            df = df.drop(columns=["load_shortfall_3h"])
-
-        # Add cyclical time features
+        # Add time features
         if self.add_time_dummies == "cyclical":
             df = self._add_cyclical_time_features(df)
+        elif self.add_time_dummies == "onehot":
+            df = self._add_onehot_time_dummies(df)
+
+        for col in ['Unnamed: 0', 'load_shortfall_3h', 'time']:
+            if col in df.columns:
+                df = df.drop(columns=[col])
         
         return df
     
@@ -182,12 +149,15 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
     
 
     def _add_cyclical_time_features(self, df):
-        # Extract time components
-        hour = df.index.hour
-        day_of_week = df.index.dayofweek
-        month = df.index.month
+        """Add sin/cos for hour, dayofweek, month + numeric year."""
+        time = df['time'] if 'time' in df.columns else df.index
+        time = pd.to_datetime(time)
 
-        # Add cyclical encoding
+        hour = time.hour
+        day_of_week = time.dayofweek
+        month = time.month
+        year = time.year
+
         df['hour_sin'] = np.sin(2 * np.pi * hour / 24)
         df['hour_cos'] = np.cos(2 * np.pi * hour / 24)
 
@@ -197,16 +167,78 @@ class WeatherDataPreprocessor(BaseEstimator, TransformerMixin):
         df['month_sin'] = np.sin(2 * np.pi * month / 12)
         df['month_cos'] = np.cos(2 * np.pi * month / 12)
 
+        # Add year as raw numeric feature
+        df['year'] = year
+
         return df
 
+    def _add_onehot_time_dummies(self, df, drop_first=False):
+        """Add one-hot dummies for hour, dayofweek, month + numeric year."""
+        time = df['time'] if 'time' in df.columns else df.index
+        time = pd.to_datetime(time)
 
+        df['hour'] = time.hour
+        df['dayofweek'] = time.dayofweek
+        df['month'] = time.month
+        df['year'] = time.year  # Always keep year as numeric
 
-class ToNumpyArray(BaseEstimator, TransformerMixin):
-    def fit(self, X, y=None):
-        return self
+        hour_dummies = pd.get_dummies(df['hour'], prefix='hour', drop_first=drop_first)
+        dow_dummies = pd.get_dummies(df['dayofweek'], prefix='dow', drop_first=drop_first)
+        month_dummies = pd.get_dummies(df['month'], prefix='month', drop_first=drop_first)
+
+        df = pd.concat([df, hour_dummies, dow_dummies, month_dummies], axis=1)
+
+        # Drop original time-based columns except 'year'
+        df = df.drop(columns=['hour', 'dayofweek', 'month'])
+
+        return df
     
-    def transform(self, X):
-        return X.to_numpy() if isinstance(X, pd.DataFrame) else X
+    def get_feature_names_out(self, input_features=None):
+        """
+        Returns the feature names after transformation.
+        
+        Steps:
+        1. Start with input features
+        2. Drop 'time', 'Unnamed: 0', 'load_shortfall_3h'
+        3. Keep processed columns like 'Valencia_wind_deg', 'Seville_pressure'
+        4. Add new cyclical features if add_time_dummies == 'cyclical'
+        """
+        if input_features is None:
+            raise ValueError("input_features must be provided.")
+
+        # Start with all input features
+        remaining_features = set(input_features)
+
+        # Columns removed during transform
+        removed_columns = {'time', 'Unnamed: 0', 'load_shortfall_3h'}
+        remaining_features -= removed_columns
+
+        # Convert to list
+        out_features = list(remaining_features)
+
+        # Add cyclical time features if enabled
+        if self.add_time_dummies == "cyclical":
+            cyclical_features = [
+                'hour_sin', 'hour_cos',
+                'dow_sin', 'dow_cos',
+                'month_sin', 'month_cos',
+                'year'
+            ]
+            out_features.extend(cyclical_features)
+        elif self.add_time_dummies == "onehot":
+            time_dummies = [
+                'hour_1', 'hour_2', 'hour_3', 'hour_4', 'hour_5', 'hour_6', 'hour_7', 
+                'hour_8', 'hour_9', 'hour_10', 'hour_11', 'hour_12', 'hour_13', 'hour_14', 
+                'hour_15', 'hour_16', 'hour_17', 'hour_18', 'hour_19', 'hour_20', 'hour_21', 
+                'hour_22', 'hour_23',
+                'dow_1', 'dow_2', 'dow_3', 'dow_4', 'dow_5', 'dow_6',
+                'month_2', 'month_3', 'month_4', 'month_5', 'month_6',
+                'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12',
+                'year'
+            ]
+            out_features = time_dummies
+
+        return np.array(out_features)
 
 # Imputation Methods
 
@@ -332,7 +364,7 @@ class InterpolationImputer(BaseEstimator, TransformerMixin):
 
 # 3. ML-based Method: KNN Imputation with Time Features
 class TimeAwareKNNImputer(BaseEstimator, TransformerMixin):
-    def __init__(self, column=None, n_neighbors=5):
+    def __init__(self, column=None, n_neighbors=5, add_time_dummies="cyclical"):
         """
         KNN-based imputation that incorporates time features
         
@@ -343,6 +375,7 @@ class TimeAwareKNNImputer(BaseEstimator, TransformerMixin):
         self.column = column
         self.n_neighbors = n_neighbors
         self.imputer = KNNImputer(n_neighbors=n_neighbors)
+        self.add_time_dummies = add_time_dummies
     
     def fit(self, X, y=None):
         # No need to fit anything here as KNN imputation is lazy
@@ -380,8 +413,10 @@ class TimeAwareKNNImputer(BaseEstimator, TransformerMixin):
         df[self.column] = imputed_data[:, feature_cols.index(self.column)]
         
         # Drop the added time features
-        df.drop(['hour_sin', 'hour_cos', 'day_sin', 'day_cos', 
-                'month_sin', 'month_cos'], axis=1, inplace=True)
+        cols_to_drop = ['day_sin', 'day_cos'] if self.add_time_dummies == "cyclical" \
+                else ['hour_sin', 'hour_cos', 'day_sin', 'day_cos', 
+                'month_sin', 'month_cos']
+        df.drop(cols_to_drop, axis=1, inplace=True)
         
         return df
 

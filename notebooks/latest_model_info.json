@@ -1,0 +1,9 @@
+{
+  "latest_model": "gs://forecast_bucket_inference/models/energy-forecast-model/20250826/model.joblib",
+  "performance": {
+    "cv_rmse": 5007.451417112638,
+    "training_samples": 8763
+  },
+  "created_at": "2025-08-26T15:56:46.737642",
+  "version": "20250826"
+}

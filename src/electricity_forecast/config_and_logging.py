@@ -103,21 +103,9 @@ def log_to_mlflow(config, output_dir, run_id, model_name, model_object, metrics,
             print("Plot does not exist, skipping logging of validation plot.")
             print("plot_path", plot_path)
 
-def save_model_and_pipeline(pipeline, model, config):
+def save_model_and_pipeline(pipeline, config):
     os.makedirs(config['output']['saved_models_folder'], exist_ok=True)
-    if config["run"]["gcloud"]:
-
-        full_pipeline = Pipeline([
-            ("preprocessing", pipeline),  
-            ("model", model)              
-        ])
-
-        # Save combined artifact
-        joblib.dump(full_pipeline, f"{config['output']['saved_models_folder']}/{config['output']['combined_model_filename']}")
-        
-    else: 
-        joblib.dump(pipeline, f"{config['output']['saved_models_folder']}/{config['output']['saved_pipeline_filename']}")
-        joblib.dump(model, f"{config['output']['saved_models_folder']}/{config['output']['saved_models_filename']}")
+    joblib.dump(pipeline, f"{config['output']['saved_models_folder']}/{config['output']['combined_model_filename']}")
 
 def store_train_features(train_df, config):
     os.makedirs(config['output']['saved_models_folder'], exist_ok=True)
