@@ -48,7 +48,7 @@ def test_pipeline_default_structure():
     pipeline = create_preprocessing_pipeline(imputer=SimpleImputer(strategy='mean'))
     assert isinstance(pipeline, Pipeline)
     step_names = [name for name, _ in pipeline.steps]
-    assert step_names == ['preprocessor', 'imputer', 'to_numpy']
+    assert step_names == ['preprocessor', 'imputer']
 
 
 def test_pipeline_runs_on_dummy_data():
