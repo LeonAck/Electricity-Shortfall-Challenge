@@ -117,40 +117,18 @@ def test_train_with_hyperparameter_tuning_no_params(mock_grid_search,
     mock_search.best_params_ = {"alpha": 1.0}
     mock_grid_search.return_value = mock_search
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    with patch("scripts.train.train_with_cross_validation") as mock_cv:
-=======
     with patch("electricity_forecast.train.train_with_cross_validation") as mock_cv:
->>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
-=======
-    with patch("electricity_forecast.train.train_with_cross_validation") as mock_cv:
->>>>>>> dev
         mock_cv.return_value = 0.123
         cv_rmse, best_params = train_with_hyperparameter_tuning(model_config, config, X_train, y_train)
         assert cv_rmse == 0.123
         assert best_params is None
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-@patch("scripts.train.get_search_class_and_params")
-@patch("scripts.train.get_split_type")
-@patch("scripts.train.make_scorer")
-@patch("scripts.train.get_pipeline_for_model")
-@patch("scripts.train.get_model")
-=======
-=======
->>>>>>> dev
 @patch("electricity_forecast.train.get_search_class_and_params")
 @patch("electricity_forecast.train.get_split_type")
 @patch("electricity_forecast.train.make_scorer")
 @patch("electricity_forecast.train.get_pipeline_for_model")
 @patch("electricity_forecast.train.get_model")
-<<<<<<< HEAD
->>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
-=======
->>>>>>> dev
 def test_train_with_hyperparameter_tuning_targeted(
     mock_get_model,
     mock_get_pipeline,
@@ -198,15 +176,7 @@ def test_train_with_hyperparameter_tuning_targeted(
     mock_get_search_class_and_params.return_value = (mock_search_class, {"param_grid": {}})
     
     # Run the function
-<<<<<<< HEAD
-<<<<<<< HEAD
-    from src.train import train_with_hyperparameter_tuning
-=======
     from electricity_forecast.train import train_with_hyperparameter_tuning
->>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
-=======
-    from electricity_forecast.train import train_with_hyperparameter_tuning
->>>>>>> dev
     cv_rmse, best_params = train_with_hyperparameter_tuning(model_config, config, X_train, y_train)
     
     # Assertions - function returns -search.best_score_
@@ -217,18 +187,8 @@ def test_train_with_hyperparameter_tuning_targeted(
     mock_search_instance.fit.assert_called_once_with(mock_X_processed, y_train)
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-@patch("scripts.train.get_pipeline_for_model")
-@patch("scripts.train.get_model")
-=======
 @patch("electricity_forecast.train.get_pipeline_for_model")
 @patch("electricity_forecast.train.get_model")
->>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
-=======
-@patch("electricity_forecast.train.get_pipeline_for_model")
-@patch("electricity_forecast.train.get_model")
->>>>>>> dev
 def test_retrain_full_model_with_best_params(
     mock_get_model,
     mock_get_pipeline,
@@ -236,15 +196,7 @@ def test_retrain_full_model_with_best_params(
     train_and_test_df
 ):
     """Test retrain_full_model using mocked components and provided best params"""
-<<<<<<< HEAD
-<<<<<<< HEAD
-    from src.train import retrain_full_model
-=======
     from electricity_forecast.train import retrain_full_model
->>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
-=======
-    from electricity_forecast.train import retrain_full_model
->>>>>>> dev
 
     train_df, _ = train_and_test_df
     X_train = train_df.drop(columns=[config['data']['target_column']])
@@ -281,18 +233,8 @@ def test_retrain_full_model_with_best_params(
     assert result_pipeline.steps[1][1] == mock_model
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-@patch("scripts.train.train_with_hyperparameter_tuning")
-@patch("scripts.train.train_with_cross_validation")
-=======
 @patch("electricity_forecast.train.train_with_hyperparameter_tuning")
 @patch("electricity_forecast.train.train_with_cross_validation")
->>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
-=======
-@patch("electricity_forecast.train.train_with_hyperparameter_tuning")
-@patch("electricity_forecast.train.train_with_cross_validation")
->>>>>>> dev
 def test_evaluate_candidate_models_with_tuning(
     mock_train_cv,
     mock_train_tuning,
@@ -300,15 +242,7 @@ def test_evaluate_candidate_models_with_tuning(
     train_and_test_df
 ):
     """Test evaluate_candidate_models when hyperparameter tuning is enabled"""
-<<<<<<< HEAD
-<<<<<<< HEAD
-    from src.train import evaluate_candidate_models
-=======
     from electricity_forecast.train import evaluate_candidate_models
->>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
-=======
-    from electricity_forecast.train import evaluate_candidate_models
->>>>>>> dev
 
     # Arrange
     train_df, _ = train_and_test_df
@@ -342,15 +276,7 @@ def test_evaluate_candidate_models_with_tuning(
 
 def test_get_best_candidate_model_returns_lowest_cv_rmse():
     """Should return the model with the smallest cv_rmse."""
-<<<<<<< HEAD
-<<<<<<< HEAD
-    from src.train import get_best_candidate_model
-=======
     from electricity_forecast.train import get_best_candidate_model
->>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
-=======
-    from electricity_forecast.train import get_best_candidate_model
->>>>>>> dev
 
     # Arrange
     results = [
@@ -368,30 +294,14 @@ def test_get_best_candidate_model_returns_lowest_cv_rmse():
     assert best.cv_rmse == 0.4
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-@patch("scripts.train.get_best_existing_model")
-=======
 @patch("electricity_forecast.train.get_best_existing_model")
->>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
-=======
-@patch("electricity_forecast.train.get_best_existing_model")
->>>>>>> dev
 def test_compare_with_production_model_prefers_existing(
     mock_get_existing,
     config,
     train_and_test_df
 ):
     """If existing model CV RMSE is better, should prefer it."""
-<<<<<<< HEAD
-<<<<<<< HEAD
-    from src.train import compare_with_production_model
-=======
     from electricity_forecast.train import compare_with_production_model
->>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
-=======
-    from electricity_forecast.train import compare_with_production_model
->>>>>>> dev
 
     # Arrange
     mock_get_existing.return_value = {"cv_rmse": 0.3}
