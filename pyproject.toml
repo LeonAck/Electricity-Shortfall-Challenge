@@ -2,7 +2,10 @@
 name = "electricity-forecast"
 version = "0.1.0"
 description = "Add your description here"
+<<<<<<< HEAD
 readme = "README.md"
+=======
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 requires-python = ">=3.11"
 dependencies = [
     "flask>=3.0.3",
@@ -13,6 +16,10 @@ dependencies = [
     "mlflow>=3.0.0",
     "numpy>=1.26.4",
     "pandas>=1.5.0",
+<<<<<<< HEAD
+=======
+    "prefect>=3.4.14",
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
     "pydantic==2.11.5",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
@@ -30,12 +37,12 @@ test = [
   "coverage"
 ]
 
-[project.scripts]
-electricity-forecast = "electricity_forecast:main"
-
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [build-system]
 requires = ["uv_build>=0.8.9,<0.9.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = []

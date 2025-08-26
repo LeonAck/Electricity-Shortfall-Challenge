@@ -68,4 +68,9 @@ def health():
     return "OK", 200  # Cloud Run uses this for readiness probes
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
+    port = int(os.environ.get("PORT", 8080))
+    app.run(
+        host="0.0.0.0",  # Listen on all interfaces
+        port=port,       # Use PORT environment variable
+        debug=False      # Never enable debug in production
+    )

@@ -12,7 +12,7 @@ logging.basicConfig(
 )
 
 # Get the project root directory
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent.parent.parent
 config_path = project_root / "configs"
 
 

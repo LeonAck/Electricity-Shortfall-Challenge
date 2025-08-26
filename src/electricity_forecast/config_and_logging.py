@@ -10,9 +10,6 @@ import hydra
 from omegaconf import DictConfig
 from pathlib import Path
 
-def load_config(config_path="configs/baseline.yaml"):
-    with open(config_path, "r") as f:
-        return yaml.safe_load(f)
     
 def run_with_config(cfg: DictConfig) -> dict:
     """The actual logic without Hydra decoration"""

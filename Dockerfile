@@ -1,25 +1,23 @@
-# Use official Python slim image
 FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install uv for dependency management
+# Install uv
 RUN pip install --no-cache-dir uv
 
-# Copy everything needed for installation first
-COPY pyproject.toml uv.lock* README.md ./
+# Copy dependencies and source
+COPY pyproject.toml uv.lock ./
 COPY src/ ./src/
-
-# Install dependencies system-wide
-RUN uv pip install --system --no-cache .
-
-# Copy the Flask app entrypoint
 COPY app.py ./app.py
 
-# Set environment variables
-ENV MODEL_VERSION="v1"
-ENV PYTHONPATH="/app/src"
+# Install package in editable mode so imports work
+RUN uv pip install --system --no-cache --editable .
 
-# Default command to run the app
+# Optional: verify
+RUN python -c "from electricity_forecast import __name__; print('Package available')"
+
+# Set environment
+ENV MODEL_VERSION="v1"
+
+# Run the app
 CMD ["python", "app.py"]

@@ -10,9 +10,15 @@ from unittest.mock import patch, MagicMock
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.pipeline import Pipeline
 
+<<<<<<< HEAD
 from src.data_loading import load_data
 from src.config_and_logging import load_config_hydra
 from src.train import (
+=======
+from electricity_forecast.data_loading import load_data
+from electricity_forecast.config_and_logging import load_config_hydra
+from electricity_forecast.train import (
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
     train_with_cross_validation,
     train_with_hyperparameter_tuning,
     retrain_full_model,
@@ -69,7 +75,11 @@ def test_load_config_and_data(config, train_and_test_df):
 
 
 
+<<<<<<< HEAD
 @patch("scripts.train.get_model")
+=======
+@patch("electricity_forecast.train.get_model")
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 def test_train_with_cross_validation(
     mock_get_model,          
     config, train_and_test_df):
@@ -99,7 +109,11 @@ def test_train_with_cross_validation(
     mock_get_model.assert_called()
 
 
+<<<<<<< HEAD
 @patch("scripts.train.GridSearchCV")
+=======
+@patch("electricity_forecast.train.GridSearchCV")
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 def test_train_with_hyperparameter_tuning_no_params(mock_grid_search,
                                                     config, train_and_test_df):
     train_df, _ = train_and_test_df
@@ -116,18 +130,30 @@ def test_train_with_hyperparameter_tuning_no_params(mock_grid_search,
     mock_search.best_params_ = {"alpha": 1.0}
     mock_grid_search.return_value = mock_search
 
+<<<<<<< HEAD
     with patch("scripts.train.train_with_cross_validation") as mock_cv:
+=======
+    with patch("electricity_forecast.train.train_with_cross_validation") as mock_cv:
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
         mock_cv.return_value = 0.123
         cv_rmse, best_params = train_with_hyperparameter_tuning(model_config, config, X_train, y_train)
         assert cv_rmse == 0.123
         assert best_params is None
 
 
+<<<<<<< HEAD
 @patch("scripts.train.get_search_class_and_params")
 @patch("scripts.train.get_split_type")
 @patch("scripts.train.make_scorer")
 @patch("scripts.train.get_pipeline_for_model")
 @patch("scripts.train.get_model")
+=======
+@patch("electricity_forecast.train.get_search_class_and_params")
+@patch("electricity_forecast.train.get_split_type")
+@patch("electricity_forecast.train.make_scorer")
+@patch("electricity_forecast.train.get_pipeline_for_model")
+@patch("electricity_forecast.train.get_model")
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 def test_train_with_hyperparameter_tuning_targeted(
     mock_get_model,
     mock_get_pipeline,
@@ -175,7 +201,11 @@ def test_train_with_hyperparameter_tuning_targeted(
     mock_get_search_class_and_params.return_value = (mock_search_class, {"param_grid": {}})
     
     # Run the function
+<<<<<<< HEAD
     from src.train import train_with_hyperparameter_tuning
+=======
+    from electricity_forecast.train import train_with_hyperparameter_tuning
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
     cv_rmse, best_params = train_with_hyperparameter_tuning(model_config, config, X_train, y_train)
     
     # Assertions - function returns -search.best_score_
@@ -186,8 +216,13 @@ def test_train_with_hyperparameter_tuning_targeted(
     mock_search_instance.fit.assert_called_once_with(mock_X_processed, y_train)
 
 
+<<<<<<< HEAD
 @patch("scripts.train.get_pipeline_for_model")
 @patch("scripts.train.get_model")
+=======
+@patch("electricity_forecast.train.get_pipeline_for_model")
+@patch("electricity_forecast.train.get_model")
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 def test_retrain_full_model_with_best_params(
     mock_get_model,
     mock_get_pipeline,
@@ -195,7 +230,11 @@ def test_retrain_full_model_with_best_params(
     train_and_test_df
 ):
     """Test retrain_full_model using mocked components and provided best params"""
+<<<<<<< HEAD
     from src.train import retrain_full_model
+=======
+    from electricity_forecast.train import retrain_full_model
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 
     train_df, _ = train_and_test_df
     X_train = train_df.drop(columns=[config['data']['target_column']])
@@ -232,8 +271,13 @@ def test_retrain_full_model_with_best_params(
     assert result_pipeline.steps[1][1] == mock_model
 
 
+<<<<<<< HEAD
 @patch("scripts.train.train_with_hyperparameter_tuning")
 @patch("scripts.train.train_with_cross_validation")
+=======
+@patch("electricity_forecast.train.train_with_hyperparameter_tuning")
+@patch("electricity_forecast.train.train_with_cross_validation")
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 def test_evaluate_candidate_models_with_tuning(
     mock_train_cv,
     mock_train_tuning,
@@ -241,7 +285,11 @@ def test_evaluate_candidate_models_with_tuning(
     train_and_test_df
 ):
     """Test evaluate_candidate_models when hyperparameter tuning is enabled"""
+<<<<<<< HEAD
     from src.train import evaluate_candidate_models
+=======
+    from electricity_forecast.train import evaluate_candidate_models
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 
     # Arrange
     train_df, _ = train_and_test_df
@@ -275,7 +323,11 @@ def test_evaluate_candidate_models_with_tuning(
 
 def test_get_best_candidate_model_returns_lowest_cv_rmse():
     """Should return the model with the smallest cv_rmse."""
+<<<<<<< HEAD
     from src.train import get_best_candidate_model
+=======
+    from electricity_forecast.train import get_best_candidate_model
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 
     # Arrange
     results = [
@@ -293,14 +345,22 @@ def test_get_best_candidate_model_returns_lowest_cv_rmse():
     assert best.cv_rmse == 0.4
 
 
+<<<<<<< HEAD
 @patch("scripts.train.get_best_existing_model")
+=======
+@patch("electricity_forecast.train.get_best_existing_model")
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 def test_compare_with_production_model_prefers_existing(
     mock_get_existing,
     config,
     train_and_test_df
 ):
     """If existing model CV RMSE is better, should prefer it."""
+<<<<<<< HEAD
     from src.train import compare_with_production_model
+=======
+    from electricity_forecast.train import compare_with_production_model
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 
     # Arrange
     mock_get_existing.return_value = {"cv_rmse": 0.3}
@@ -325,13 +385,21 @@ def test_compare_with_production_model_prefers_existing(
 
 
 
+<<<<<<< HEAD
 @patch("scripts.train.get_best_existing_model")
+=======
+@patch("electricity_forecast.train.get_best_existing_model")
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 def test_compare_with_production_model_prefers_new(
     mock_get_existing,
     config
 ):
     """If candidate model CV RMSE is better, should use it instead of existing."""
+<<<<<<< HEAD
     from src.train import compare_with_production_model
+=======
+    from electricity_forecast.train import compare_with_production_model
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 
     # Arrange
     mock_get_existing.return_value = {"cv_rmse": 0.5}
@@ -352,6 +420,7 @@ def test_compare_with_production_model_prefers_new(
     assert existing is None
 
 
+<<<<<<< HEAD
 @patch("scripts.train.mlflow.log_metric")
 @patch("scripts.train.mlflow.log_param")
 @patch("scripts.train.mlflow.log_params")
@@ -361,6 +430,17 @@ def test_compare_with_production_model_prefers_new(
 @patch("scripts.train.evaluate_candidate_models")
 @patch("scripts.train.get_best_candidate_model")
 @patch("scripts.train.compare_with_production_model")
+=======
+@patch("electricity_forecast.train.mlflow.log_metric")
+@patch("electricity_forecast.train.mlflow.log_param")
+@patch("electricity_forecast.train.mlflow.log_params")
+@patch("electricity_forecast.train.mlflow.set_tag")
+@patch("electricity_forecast.train.mlflow.start_run")
+@patch("electricity_forecast.train.setup_mlflow_experiment")
+@patch("electricity_forecast.train.evaluate_candidate_models")
+@patch("electricity_forecast.train.get_best_candidate_model")
+@patch("electricity_forecast.train.compare_with_production_model")
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 def test_choose_best_model_prefers_existing(
     mock_compare,
     mock_get_best,
@@ -374,7 +454,11 @@ def test_choose_best_model_prefers_existing(
     config,
     train_and_test_df
 ):
+<<<<<<< HEAD
     from src.train import choose_best_model, ModelResult, BestModelResult
+=======
+    from electricity_forecast.train import choose_best_model, ModelResult, BestModelResult
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 
     train_df, _ = train_and_test_df
 
@@ -412,6 +496,7 @@ def test_choose_best_model_prefers_existing(
     mock_compare.assert_called_once_with(mock_get_best.return_value, config)
 
 
+<<<<<<< HEAD
 @patch("scripts.train.mlflow.log_metric")
 @patch("scripts.train.mlflow.log_param")
 @patch("scripts.train.mlflow.log_params")
@@ -423,6 +508,19 @@ def test_choose_best_model_prefers_existing(
 @patch("scripts.train.compare_with_production_model")
 @patch("scripts.train.retrain_full_model")
 @patch("scripts.train.log_and_register_final_model")
+=======
+@patch("electricity_forecast.train.mlflow.log_metric")
+@patch("electricity_forecast.train.mlflow.log_param")
+@patch("electricity_forecast.train.mlflow.log_params")
+@patch("electricity_forecast.train.mlflow.set_tag")
+@patch("electricity_forecast.train.mlflow.start_run")
+@patch("electricity_forecast.train.setup_mlflow_experiment")
+@patch("electricity_forecast.train.evaluate_candidate_models")
+@patch("electricity_forecast.train.get_best_candidate_model")
+@patch("electricity_forecast.train.compare_with_production_model")
+@patch("electricity_forecast.train.retrain_full_model")
+@patch("electricity_forecast.train.log_and_register_final_model")
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
 def test_choose_best_model_trains_new(
     mock_log_and_register,
     mock_retrain_full,
@@ -439,7 +537,11 @@ def test_choose_best_model_trains_new(
     train_and_test_df
 ):
     """Test that choose_best_model trains and registers a new model when it's better"""
+<<<<<<< HEAD
     from src.train import choose_best_model, ModelResult, BestModelResult
+=======
+    from electricity_forecast.train import choose_best_model, ModelResult, BestModelResult
+>>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
     train_df, _ = train_and_test_df
     X_train = train_df.drop(columns=[config['data']['target_column']])
     y_train = train_df[config['data']['target_column']]
