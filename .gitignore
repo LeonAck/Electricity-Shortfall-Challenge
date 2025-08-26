@@ -23,3 +23,4 @@ saved_models/
 models_energy-forecast-model_*
 synthetic_test_data_aligned.json
 test_input.json
+*.html
