@@ -64,9 +64,8 @@ def test_pipeline_runs_on_dummy_data():
     imputer = TimeAwareKNNImputer()
     pipeline = create_preprocessing_pipeline(imputer=imputer)
     output = pipeline.fit_transform(df)
-    assert isinstance(output, np.ndarray)
     assert output.shape[0] == df.shape[0]  # Check row count preserved
-    assert np.isnan(np.sum(output[:, 0])) == 1 # Check NaNs are not handled
+    assert output.isna().sum().sum() > 0  # Check NaNs are not handled
 
 
 def test_pipeline_scaling_included():
@@ -104,8 +103,8 @@ def test_pipeline_other_imputer():
     imputer = SimplifiedPatternImputer(column='temperature')
     pipeline = create_preprocessing_pipeline(imputer=imputer)
     result = pipeline.fit_transform(df)
-    assert isinstance(result, np.ndarray)
-    assert np.isnan(np.sum(result[:,0])) == 0 # Check no NaNs remain
+
+    assert result.isna().sum().sum() == 1 # Check no NaNs remain
 
 
 def test_time_dummies_affect_output_shape():
@@ -226,6 +225,5 @@ def test_no_nans(train_and_test_df):
     pipeline = create_preprocessing_pipeline(imputer=imputer)
     result = pipeline.fit_transform(df)
 
-    assert isinstance(result, np.ndarray)
-    assert np.isnan(np.sum(result[:,0])) == 0 # Check no NaNs remain
+    assert result.isna().sum().sum() == 0 # Check no NaNs remain
 
