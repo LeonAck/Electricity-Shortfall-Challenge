@@ -322,6 +322,7 @@ def choose_best_model(train_df, config: Dict[str, Any]) -> BestModelResult:
             final_model_name = existing_best['model_type']
             model_version = existing_best['version']
             is_from_mlflow = True
+
         else:
             # Train new model on full dataset
             final_model = retrain_full_model(

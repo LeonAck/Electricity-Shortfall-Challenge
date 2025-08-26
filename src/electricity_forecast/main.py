@@ -1,5 +1,5 @@
 from electricity_forecast.data_loading import load_data, test_training_data
-from electricity_forecast.config_and_logging import load_config_hydra
+from electricity_forecast.config_and_logging import load_config_hydra, save_model_and_pipeline
 from electricity_forecast.train import choose_best_model
 
 from pathlib import Path
@@ -16,7 +16,7 @@ project_root = Path(__file__).parent.parent.parent
 config_path = project_root / "configs"
 
 
-def main(config_name="config_cv.yaml"):
+def main(config_name="config_test.yaml"):
     config = load_config_hydra(config_name=config_name, config_path=str(config_path))
     print(config.__class__)
     
@@ -34,7 +34,7 @@ def main(config_name="config_cv.yaml"):
     )
 
     print(best_model_results)
-
+    save_model_and_pipeline(best_model_results.full_pipeline, config)
 
 if __name__ == "__main__":
     main()

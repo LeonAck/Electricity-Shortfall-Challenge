@@ -21,3 +21,4 @@ ENV MODEL_VERSION="v1"
 
 # Run the app
 CMD ["python", "app.py"]
+

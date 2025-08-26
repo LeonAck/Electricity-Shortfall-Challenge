@@ -3,9 +3,12 @@ name = "electricity-forecast"
 version = "0.1.0"
 description = "Add your description here"
 <<<<<<< HEAD
+<<<<<<< HEAD
 readme = "README.md"
 =======
 >>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
+=======
+>>>>>>> dev
 requires-python = ">=3.11"
 dependencies = [
     "flask>=3.0.3",
@@ -17,14 +20,20 @@ dependencies = [
     "numpy>=1.26.4",
     "pandas>=1.5.0",
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     "prefect>=3.4.14",
 >>>>>>> f8f64ecb666768cf0d9ec227bc7ae180a7defcb5
+=======
+    "prefect>=3.4.14",
+>>>>>>> dev
     "pydantic==2.11.5",
+    "pyspark>=4.0.0",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "pyyaml>=6.0",
     "scikit-learn>=1.6.0",
+    "shap>=0.48.0",
     "statsmodels>=0.14.0",
     "uv-build>=0.8.12",
     "xgboost>=1.7.0",
@@ -45,4 +54,8 @@ requires = ["uv_build>=0.8.9,<0.9.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dev = []
+dev = [
+    "ipywidgets>=8.1.7",
+    "setuptools>=80.9.0",
+    "ydata-profiling>=4.16.1",
+]
