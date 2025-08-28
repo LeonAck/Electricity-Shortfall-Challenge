@@ -1,0 +1,49 @@
+# Tree models
+- type: RandomForest
+  params:
+    n_estimators: 100
+    max_depth: 10
+    random_state: ${seed}
+  tuning_params:
+    n_estimators: [100, 200, 300, 500]  # Removed 50, added higher values
+    max_depth: [10, 15, 20, 30, 10000]  # More granular + unlimited depth
+    min_samples_split: [2, 5, 10, 20]  # Added 20 for regularization
+    min_samples_leaf: [1, 2, 4, 8]     # Added 8 for regularization
+    max_features: ['sqrt', 'log2', 0.3, 0.5, 0.7]  # NEW - feature sampling
+    bootstrap: [True, False]            # NEW - with/without replacement
+    max_samples: [0.7, 0.8, 0.9, 1] # NEW - subsample size (if bootstrap=True)
+  scaling: false
+
+- type: GradientBoostingRegressor
+  params:
+    n_estimators: 100
+    max_depth: 4
+    learning_rate: 0.1
+    random_state: ${seed}
+  tuning_params:
+    n_estimators: [100, 200, 300, 500]     # Higher values for better performance
+    max_depth: [3, 4, 5, 6, 7, 8]          # Extended range
+    learning_rate: [0.01, 0.05, 0.1, 0.15, 0.2]  # More granular
+    subsample: [0.7, 0.8, 0.9, 1.0]        # NEW - prevents overfitting
+    max_features: ['sqrt', 'log2', 0.3, 0.5, 1]  # NEW - feature sampling
+    min_samples_split: [2, 5, 10, 20]      # NEW - regularization
+    min_samples_leaf: [1, 2, 4, 8]         # NEW - regularization
+    alpha: [0.1, 0.5, 0.9]                 # NEW - quantile loss parameter
+  scaling: false
+
+- type: XGBRegressor
+  params:
+    n_estimators: 100
+    max_depth: 4
+    learning_rate: 0.1
+    random_state: ${seed}
+  tuning_params:
+    n_estimators: [100, 200, 300, 500]  # Increased range
+    max_depth: [3, 4, 5, 6, 8]
+    learning_rate: [0.01, 0.05, 0.1, 0.15]
+    subsample: [0.8, 0.9, 1.0]  # NEW - prevents overfitting
+    colsample_bytree: [0.8, 0.9, 1.0]  # NEW - feature sampling
+    reg_alpha: [0, 0.1, 0.5, 1.0]  # NEW - L1 regularization
+    reg_lambda: [0, 0.1, 0.5, 1.0]  # NEW - L2 regularization
+    min_child_weight: [1, 3, 5]  # NEW - controls overfitting
+  scaling: false
